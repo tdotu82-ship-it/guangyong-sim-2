@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>光泳效应虚拟仿真实验平台</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<!-- Three.js r140 -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="main-nav" id="mainNav">
+  <div class="nav-brand">
+    <span class="nav-logo">☀</span>
+    <span class="nav-title">光泳效应虚拟仿真平台</span>
+  </div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#hero">首页</a></li>
+    <li><a href="#background">背景</a></li>
+    <li><a href="#theory">实验原理</a></li>
+    <li><a href="#module5">虚拟操作台</a></li>
+    <li><a href="#module6">实验结果</a></li>
+    <li><a href="#innovation">创新</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section id="hero" class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">光泳效应虚拟仿真实验平台</h1>
+    <p class="hero-subtitle">Photophoresis Effect Virtual Simulation Platform</p>
+    <p class="hero-desc">全国大学生物理实验竞赛（创新）作品 · 3D交互可视化 · 虚拟实验操作</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="stat-num">3</span><span class="stat-label">3D交互原理</span></div>
+      <div class="hero-stat"><span class="stat-num">1</span><span class="stat-label">虚拟操作台</span></div>
+      <div class="hero-stat"><span class="stat-num">4</span><span class="stat-label">实验曲线</span></div>
+    </div>
+    <a href="#background" class="hero-btn">开始探索 →</a>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>向下滚动探索</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ===== 背景介绍 ===== -->
+<section id="background" class="section">
+  <div class="container">
+    <h2 class="section-title">背景介绍</h2>
+    <div class="hero-image-wrapper">
+      <img src="assets/images/flyer-concept.jpg" alt="光泳飞行器概念图" class="hero-experiment-img">
+    </div>
+    <div class="bg-grid">
+      <div class="bg-card fade-in">
+        <div class="bg-card-icon">🚀</div>
+        <h3>哈佛飞行器</h3>
+        <p>2025年8月，《自然》杂志报道哈佛大学研究者利用阳光直接加热空气，将直径1厘米的圆盘送上75公里高空，无需电池、火箭或推进器。</p>
+      </div>
+      <div class="bg-card fade-in">
+        <div class="bg-card-icon">🔬</div>
+        <h3>光泳效应的发现</h3>
+        <p>光泳效应（Photophoresis）指悬浮在气体中的微粒在光照下受到的净推力。19世纪末Clausius和Güntt发现该现象，但微观机制至今仍在研究中。</p>
+      </div>
+      <div class="bg-card fade-in">
+        <div class="bg-card-icon">💡</div>
+        <h3>本项目</h3>
+        <p>设计了一套低成本、高灵敏度的光泳力测量装置，可将光泳效应引入本科教学实验，开展设计性实验和科技创新活动。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 实验目的 ===== -->
+<section id="purpose" class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">实验目的</h2>
+    <div class="purpose-grid">
+      <div class="purpose-card fade-in">
+        <span class="purpose-num">1</span>
+        <h3>探究光泳力与气压的关系</h3>
+        <p>在不同真空度下测量光泳力，分析气压对光泳力的影响规律。</p>
+        <a href="#module5" class="purpose-link">去操作台实验 →</a>
+      </div>
+      <div class="purpose-card fade-in">
+        <span class="purpose-num">2</span>
+        <h3>探究光泳力与光强的关系</h3>
+        <p>固定气压和时间，改变光照强度，研究光强对光泳力的影响。</p>
+        <a href="#module5" class="purpose-link">去操作台实验 →</a>
+      </div>
+      <div class="purpose-card fade-in">
+        <span class="purpose-num">3</span>
+        <h3>探究光泳力与时间的关系</h3>
+        <p>固定气压和光强，记录光泳力随时间的变化，观察趋稳过程。</p>
+        <a href="#module5" class="purpose-link">去操作台实验 →</a>
+      </div>
+      <div class="purpose-card fade-in">
+        <span class="purpose-num">4</span>
+        <h3>寻找临界条件</h3>
+        <p>测量光泳力与光压力相等的临界压强，理解两种力的物理本质差异。</p>
+        <a href="#module5" class="purpose-link">去操作台实验 →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 实验原理（三个tab切换） ===== -->
+<section id="theory" class="section">
+  <div class="container">
+    <h2 class="section-title">实验原理 <span class="highlight-tag">3D交互</span></h2>
+    <p class="section-desc">选择原理模块，观察3D仿真动画理解物理机制</p>
+
+    <div class="theory-tabs">
+      <button class="theory-tab active" data-tab="tab1">模块一：光压力原理</button>
+      <button class="theory-tab" data-tab="tab2">模块二：光泳效应原理</button>
+      <button class="theory-tab" data-tab="tab3">模块三：光压抵消原理</button>
+    </div>
+
+    <!-- Tab 1：光压力 -->
+    <div class="theory-panel active" id="tab1">
+      <div class="module1-layout">
+        <div class="three-container" id="theoryScene1"><div class="three-loading">正在加载3D场景...</div></div>
+        <div class="theory-content">
+          <div class="physics-explain">
+            <h3>📐 光压力的物理本质</h3>
+            <p>光由光子组成，每个光子具有动量 <strong>p = h/λ</strong>。当光子撞击物体表面时，根据动量守恒定律，光子动量的变化必然传递给物体一个反冲力。</p>
+          </div>
+          <div class="formula-card">
+            <h3>光子撞击 · 动量守恒</h3>
+            <div class="formula-row">
+              <div class="formula-half">
+                <p class="formula-label">吸收（石墨侧）</p>
+                <div class="formula">Δp = p → F = p</div>
+                <p class="formula-note">光子被吸收，动量全部传递给薄板</p>
+              </div>
+              <div class="formula-half">
+                <p class="formula-label">反射（铝箔侧）</p>
+                <div class="formula">Δp = 2p → F = 2p</div>
+                <p class="formula-note">光子反弹，动量变化为2倍</p>
+              </div>
+            </div>
+          </div>
+          <div class="formula-card">
+            <h3>光压力基本公式</h3>
+            <div class="formula">F = P·(2ρ + α) / (c·cos²θ)</div>
+            <p class="formula-note">P: 光功率 &nbsp;|&nbsp; ρ: 反射率 &nbsp;|&nbsp; α: 吸收率 &nbsp;|&nbsp; c: 光速</p>
+          </div>
+          <div class="conclusion-box">
+            <strong>💡 关键结论：</strong>光子撞击后反弹（反射），动量变化为2p，产生的光压力是吸收时的<strong>2倍</strong>。光压力方向始终<strong>沿光路方向向下</strong>。
+          </div>
+          <div class="theory-controls">
+            <button id="m1PauseBtn" class="ctrl-btn">⏸ 暂停</button>
+            <button id="m1ResetBtn" class="ctrl-btn">↺ 重置</button>
+            <label class="ctrl-label"><input type="checkbox" id="m1ShowForces" checked> 显示力箭头</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2：光泳效应 -->
+    <div class="theory-panel" id="tab2">
+      <div class="module2-layout">
+        <div class="three-container" id="theoryScene2"><div class="three-loading">正在加载3D场景...</div></div>
+        <div class="theory-controls-right">
+          <div class="control-group">
+            <label>气压调节（分子密度）</label>
+            <input type="range" id="pressureSlider" min="1" max="100" value="50">
+            <span class="control-value" id="pressureValue">50%</span>
+          </div>
+          <div class="control-group">
+            <label>光强调节</label>
+            <input type="range" id="intensitySlider" min="1" max="100" value="50">
+            <span class="control-value" id="intensityValue">50%</span>
+          </div>
+          <div class="theory-controls">
+            <button id="m2PauseBtn" class="ctrl-btn">⏸ 暂停</button>
+            <button id="m2ResetBtn" class="ctrl-btn">↺ 重置</button>
+          </div>
+          <div class="module2-explain">
+            <p>光照让石墨面（上）温度升高，气体分子从热面反弹时获得更多动能（红色快分子），从冷面（铝箔，下）反弹时动能较小（蓝色慢分子）。两侧分子碰撞的动量差，产生了宏观上的净推力——这就是<span class="highlight">光泳力</span>，方向<strong>向上</strong>。</p>
+          </div>
+          <div class="force-display">
+            <span class="force-label">净光泳力：</span>
+            <span class="force-value" id="netForce">0.00 μN</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3：光压抵消 -->
+    <div class="theory-panel" id="tab3">
+      <div class="module3-layout">
+        <div class="three-container" id="theoryScene3"><div class="three-loading">正在加载3D场景...</div></div>
+        <div class="theory-controls-right">
+          <div class="control-group">
+            <label>光强比（铝箔侧 : 石墨侧）</label>
+            <input type="range" id="ratioSlider" min="10" max="100" value="50">
+            <span class="control-value" id="ratioValue">1 : 2.0</span>
+          </div>
+          <div class="cancel-status">
+            <div class="cancel-meter">
+              <div class="cancel-meter-bar" id="cancelMeterBar"></div>
+            </div>
+            <span class="cancel-label">光压力抵消程度：<strong id="cancelPercent">50%</strong></span>
+          </div>
+          <div class="cancel-note">
+            <p>铝箔反射光产生的光压力是石墨吸收光的<strong>2倍</strong>。将铝箔侧光强调为石墨侧的<strong>1/2</strong>时，两侧光压力恰好抵消（铝箔侧：2×0.5=1，石墨侧：1×1=1），传感器只测量到纯净的<span class="highlight">光泳力</span>（向上）。</p>
+          </div>
+          <div class="force-breakdown" id="forceBreakdown">
+            <div class="force-row">
+              <span class="force-row-label">铝箔光压力 ↓</span>
+              <span class="force-row-value" id="alLightForce">1.00 μN</span>
+            </div>
+            <div class="force-row">
+              <span class="force-row-label">石墨光压力 ↓</span>
+              <span class="force-row-value" id="grLightForce">0.50 μN</span>
+            </div>
+            <div class="force-row">
+              <span class="force-row-label">光泳力 ↑</span>
+              <span class="force-row-value green" id="photoForce">0.50 μN</span>
+            </div>
+            <div class="force-row separator">
+              <span class="force-row-label">合力</span>
+              <span class="force-row-value highlight" id="netForce3">0.50 μN ↑</span>
+            </div>
+          </div>
+          <div class="theory-controls">
+            <button id="m3PauseBtn" class="ctrl-btn">⏸ 暂停</button>
+            <button id="m3ResetBtn" class="ctrl-btn">↺ 重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 理论推导 ===== -->
+<section id="theory-detail" class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">理论推导</h2>
+    <div class="theory-detail-grid">
+      <div class="theory-card fade-in">
+        <h3>光压力公式推导</h3>
+        <div class="formula-block">
+          <p>F = <span class="formula-highlight">P(2ρ + α) / (c·cos²θ)</span></p>
+          <p class="formula-note">P为光功率，ρ为反射率，α为吸收率，θ为入射角</p>
+        </div>
+        <p class="theory-card-desc">光压力正比于光功率，反比于光速。反射面受力是吸收面的2倍。</p>
+      </div>
+      <div class="theory-card fade-in">
+        <h3>光泳力公式推导</h3>
+        <div class="formula-block">
+          <p>F_pp = <span class="formula-highlight">K · ΔT · (dλ/dT)</span></p>
+          <p class="formula-note">K为几何因子，ΔT为温差，dλ/dT为平均自由程温度系数</p>
+        </div>
+        <p class="theory-card-desc">光泳力正比于温差和压强梯度。在低气压区接近线性，高气压区受饱和效应影响。</p>
+      </div>
+      <div class="theory-card fade-in">
+        <h3>临界压强条件</h3>
+        <div class="formula-block">
+          <p>F_pp = F_light &nbsp;→&nbsp; <span class="formula-highlight">P_c ≈ 0.021 MPa</span></p>
+          <p class="formula-note">光泳力与光压力相等时的压强，即临界压强</p>
+        </div>
+        <p class="theory-card-desc">在临界压强以上，光压力主导；以下，光泳力主导。传感器读数在临界点附近趋近于零。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 应用前景 ===== -->
+<section id="applications" class="section">
+  <div class="container">
+    <h2 class="section-title">应用前景</h2>
+    <div class="applications-grid">
+      <div class="app-card fade-in">
+        <div class="app-icon">🛰️</div>
+        <h3>太空推进</h3>
+        <p>利用太阳光直接产生推力，无需携带燃料，可用于卫星姿态控制和低成本太空探测器。</p>
+      </div>
+      <div class="app-card fade-in">
+        <div class="app-icon">🔬</div>
+        <h3>纳米操作</h3>
+        <p>光泳力可用于操控纳米颗粒、生物细胞等微尺度物体，在生物医学和材料科学中有重要应用。</p>
+      </div>
+      <div class="app-card fade-in">
+        <div class="app-icon">🌍</div>
+        <h3>大气物理</h3>
+        <p>光泳效应影响气溶胶在大气中的运动和分布，对气候模型和空气质量研究有重要意义。</p>
+      </div>
+      <div class="app-card fade-in">
+        <div class="app-icon">📚</div>
+        <h3>物理教学</h3>
+        <p>本实验将前沿研究引入本科教学，帮助学生理解光与物质相互作用的微观机制。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 虚拟实验操作台 ===== -->
+<section id="module5" class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">模块五：虚拟实验操作台 <span class="highlight-tag">核心交互</span></h2>
+    <p class="section-desc">模拟真实实验流程，操作虚拟仪器，记录实验数据</p>
+
+    <div class="console-top">
+      <div class="console-left">
+        <div class="three-container" id="instrumentContainer" style="height:360px;">
+          <div class="three-loading">正在加载仪器3D模型...</div>
+        </div>
+        <div class="instrument-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#fbbf24"></span>光源</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#2d2d2d"></span>石墨</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#e5e7eb"></span>铝箔</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>压强传感器</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span>光强计</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#f97316"></span>真空泵</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>力传感器</span>
+        </div>
+      </div>
+
+      <div class="console-right">
+        <div class="instruments-row">
+          <div class="mini-instrument">
+            <div class="mini-label">压强</div>
+            <div class="mini-value" id="pressureReadout">0.1000</div>
+            <div class="mini-unit">MPa</div>
+          </div>
+          <div class="mini-instrument">
+            <div class="mini-label">石墨光强</div>
+            <div class="mini-value" id="graphiteLight">0</div>
+            <div class="mini-unit">W/m²</div>
+          </div>
+          <div class="mini-instrument">
+            <div class="mini-label">铝箔光强</div>
+            <div class="mini-value" id="aluminumLight">0</div>
+            <div class="mini-unit">W/m²</div>
+          </div>
+          <div class="mini-instrument">
+            <div class="mini-label">比值</div>
+            <div class="mini-value" id="lightRatio">—</div>
+          </div>
+          <div class="mini-instrument">
+            <div class="mini-label">净力</div>
+            <div class="mini-value highlight" id="netForceReadout">0.0</div>
+            <div class="mini-unit">μN</div>
+          </div>
+        </div>
+
+        <div class="stopwatch-box">
+          <div class="mini-label">计时</div>
+          <div class="stopwatch-display" id="timerDisplay">00:00:00</div>
+        </div>
+
+        <div class="realtime-chart-box">
+          <div class="mini-label">实时曲线</div>
+          <div id="realtimeChart" class="realtime-chart"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="console-bottom">
+      <div class="step-indicator" id="stepIndicator">
+        <div class="step active" data-step="1"><div class="step-num">1</div><div class="step-label">光强调试</div></div>
+        <div class="step" data-step="2"><div class="step-num">2</div><div class="step-label">建立真空</div></div>
+        <div class="step" data-step="3"><div class="step-num">3</div><div class="step-label">测量光泳力</div></div>
+        <div class="step" data-step="4"><div class="step-num">4</div><div class="step-label">控制变量</div></div>
+        <div class="step" data-step="5"><div class="step-num">5</div><div class="step-label">临界点</div></div>
+        <button id="freeModeBtn" class="free-mode-btn">自由模式</button>
+      </div>
+
+      <div class="step-hint" id="stepHint">
+        <span id="stepHintText">Step 1：启动光源，调节光强调试至1:2比例</span>
+      </div>
+
+      <div class="console-controls">
+        <div class="ctrl-panel">
+          <h3>☀ 光源控制</h3>
+          <div class="ctrl-buttons">
+            <button id="lightOnBtn" class="panel-btn green">启动光源</button>
+            <button id="lightOffBtn" class="panel-btn red" disabled>关闭光源</button>
+          </div>
+          <div class="ctrl-slider">
+            <label>光强调节</label>
+            <input type="range" id="lightIntensity" min="0" max="200" value="0">
+            <span id="lightIntensityVal" class="slider-val">0 W</span>
+          </div>
+        </div>
+
+        <div class="ctrl-panel">
+          <h3>🔧 真空控制</h3>
+          <div class="ctrl-buttons">
+            <button id="pumpOnBtn" class="panel-btn blue">启动真空泵</button>
+            <button id="pumpOffBtn" class="panel-btn gray">停止</button>
+            <button id="ventBtn" class="panel-btn orange">放气</button>
+          </div>
+          <div class="ctrl-slider">
+            <label>目标压强</label>
+            <input type="range" id="targetPressure" min="0" max="100" value="0">
+            <span id="targetPressureVal" class="slider-val">0.100 MPa</span>
+          </div>
+          <div class="current-value">当前：<span id="currentPressure" class="highlight-num">0.1000</span> MPa</div>
+        </div>
+
+        <div class="ctrl-panel">
+          <h3>⏱ 计时控制</h3>
+          <div class="ctrl-buttons">
+            <button id="timerStartBtn" class="panel-btn green">开始</button>
+            <button id="timerPauseBtn" class="panel-btn gray">暂停</button>
+            <button id="timerResetBtn" class="panel-btn gray">复位</button>
+          </div>
+          <div class="timer-display" id="timerDisplay2">00:00:00</div>
+        </div>
+
+        <div class="ctrl-panel">
+          <h3>📊 实验模式</h3>
+          <div class="mode-buttons">
+            <button class="mode-btn active" data-mode="single">单次测量</button>
+            <button class="mode-btn" data-mode="intensity">光强-力</button>
+            <button class="mode-btn" data-mode="pressure">压强-力</button>
+            <button class="mode-btn" data-mode="time">时间-力</button>
+            <button class="mode-btn" data-mode="critical">临界点</button>
+          </div>
+          <button id="recordBtn" class="panel-btn record" disabled>📌 请先完成光强调试</button>
+          <button id="exportBtn" class="panel-btn" style="border-color:var(--accent3);color:var(--accent3);width:100%;margin-top:0.3rem;" disabled>📥 导出CSV数据</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 实验结果曲线 ===== -->
+<section id="module6" class="section">
+  <div class="container">
+    <h2 class="section-title">模块六：实验结果曲线</h2>
+    <p class="section-desc">基于真实实验数据的可视化分析</p>
+    <div class="charts-grid">
+      <div class="chart-card fade-in">
+        <h3>光泳力 vs 气压</h3>
+        <p class="chart-desc">非线性递增，高真空区域接近线性</p>
+        <div id="chart1" class="chart-area"></div>
+      </div>
+      <div class="chart-card fade-in">
+        <h3>光泳力 vs 光强</h3>
+        <p class="chart-desc">近似线性，R²=0.9679</p>
+        <div id="chart2" class="chart-area"></div>
+      </div>
+      <div class="chart-card fade-in">
+        <h3>光泳力 vs 时间</h3>
+        <p class="chart-desc">指数增长趋稳，R²=0.997</p>
+        <div id="chart3" class="chart-area"></div>
+      </div>
+      <div class="chart-card fade-in">
+        <h3>临界点测量</h3>
+        <p class="chart-desc">光泳力=光压力，临界压强0.018~0.024 MPa</p>
+        <div id="chart4" class="chart-area"></div>
+      </div>
+    </div>
+
+    <div class="chart-card fade-in" style="grid-column: 1 / -1;">
+      <h3>物理量关系全景图</h3>
+      <p class="chart-desc">拖动/缩放查看物理量之间的关联关系 · 节点大小表示影响力大小</p>
+      <div id="relationChart" class="chart-area" style="height:380px;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 因果链动画 ===== -->
+<section id="causal-section" class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">物理机制因果链</h2>
+    <p class="section-desc">从光子到光泳力的完整因果链条</p>
+    <div class="causal-chain">
+      <svg class="causal-svg" viewBox="0 0 800 120" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#374357" />
+          </marker>
+          <filter id="glow4"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <line x1="70" y1="60" x2="130" y2="60" stroke="#374357" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="190" y1="60" x2="250" y2="60" stroke="#374357" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="310" y1="60" x2="370" y1="60" stroke="#374357" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="430" y1="60" x2="490" y2="60" stroke="#374357" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="550" y1="60" x2="610" y2="60" stroke="#374357" stroke-width="2" marker-end="url(#arrow)" />
+        <line x1="670" y1="60" x2="730" y2="60" stroke="#374357" stroke-width="2" marker-end="url(#arrow)" />
+        <g class="chain-item" data-i="0">
+          <circle cx="40" cy="60" r="28" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2" />
+          <text x="40" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">光子撞击</text>
+          <text x="40" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">p=h/λ</text>
+        </g>
+        <g class="chain-item" data-i="1">
+          <circle cx="160" cy="60" r="28" fill="rgba(251,191,36,0.2)" stroke="#fbbf24" stroke-width="2" />
+          <text x="160" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">吸收/反射</text>
+          <text x="160" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">动量传递</text>
+        </g>
+        <g class="chain-item" data-i="2">
+          <circle cx="280" cy="60" r="28" fill="rgba(239,68,68,0.2)" stroke="#ef4444" stroke-width="2" />
+          <text x="280" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">温差 ΔT</text>
+          <text x="280" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">石墨热 铝箔冷</text>
+        </g>
+        <g class="chain-item" data-i="3">
+          <circle cx="400" cy="60" r="28" fill="rgba(34,197,94,0.2)" stroke="#22c55e" stroke-width="2" />
+          <text x="400" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">分子碰撞</text>
+          <text x="400" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">动能不对称</text>
+        </g>
+        <g class="chain-item" data-i="4">
+          <circle cx="520" cy="60" r="28" fill="rgba(139,92,246,0.2)" stroke="#8b5cf6" stroke-width="2" />
+          <text x="520" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">光泳力 ↑</text>
+          <text x="520" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">F=K·ΔT·dλ/dT</text>
+        </g>
+        <g class="chain-item" data-i="5">
+          <circle cx="640" cy="60" r="28" fill="rgba(249,115,22,0.2)" stroke="#f97316" stroke-width="2" />
+          <text x="640" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">临界抵消</text>
+          <text x="640" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">F_pp = F_light</text>
+        </g>
+        <g class="chain-item" data-i="6">
+          <circle cx="760" cy="60" r="28" fill="rgba(96,165,250,0.2)" stroke="#60a5fa" stroke-width="2" />
+          <text x="760" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">净测量</text>
+          <text x="760" y="70" text-anchor="middle" fill="#94a3b8" font-size="9">传感器读数</text>
+        </g>
+      </svg>
+      <div style="text-align:center; margin-top:1rem;">
+        <button id="causalPlayBtn" class="ctrl-btn large">▶ 播放动画</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 创新与优势 ===== -->
+<section id="innovation" class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">创新与优势</h2>
+    <div class="innovation-grid">
+      <div class="innov-card fade-in">
+        <div class="innov-num">01</div>
+        <h3>填补教学空白</h3>
+        <p>国内外大学教材和科普读物中缺少光泳效应的系统讲解，本实验将前沿研究引入本科教学。</p>
+      </div>
+      <div class="innov-card fade-in">
+        <div class="innov-num">02</div>
+        <h3>对称抵消光压力</h3>
+        <p>利用"深色吸收-浅色反射"双薄片对称结构，通过偏振片将浅色侧光强调至深色侧的1/2，实现光压力抵消。</p>
+      </div>
+      <div class="innov-card fade-in">
+        <div class="innov-num">03</div>
+        <h3>同一装置同时观测</h3>
+        <p>光泳力和光压力在物理本质上是完全不同的两种效应，本装置在同一传感器、同一真空腔上同时观测两者。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 总结 ===== -->
+<section id="summary" class="section">
+  <div class="container">
+    <h2 class="section-title">总结</h2>
+    <div class="summary-content">
+      <p>本作品成功设计并搭建了一套低成本、高灵敏度的光泳力测量装置，可探究光泳力随气压、光功率等因素的变化规律。通过虚拟仿真平台，学生可以在浏览器中交互式地理解光泳效应的微观机制和宏观实验过程。</p>
+      <p>该仪器可面向物理及相关专业学生，开展设计性实验、教学研究、科技创新活动，为将光泳效应推入大学物理实验教学开拓了道路。</p>
+    </div>
+  </div>
+</section>
+
+<footer class="main-footer">
+  <div class="container">
+    <p>光泳效应虚拟仿真实验平台 · 全国大学生物理实验竞赛（创新）作品</p>
+    <p class="footer-note">基于真实实验数据构建 · Three.js + ECharts 驱动</p>
+  </div>
+</footer>
+
+<script src="assets/js/simulator.js"></script>
+<script src="assets/js/instrument-model.js"></script>
+<script src="assets/js/three-scene.js"></script>
+<script src="assets/js/charts.js"></script>
+<script src="assets/js/controls.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
