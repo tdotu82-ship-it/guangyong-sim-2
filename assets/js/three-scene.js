@@ -354,7 +354,7 @@ function buildModule2Scene() {
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // 薄板：一块板，正面红色（高温面），背面蓝色（低温面）
+  // 薄板：一块板，正面红色（高温面，上半部分），背面蓝色（低温面，下半部分）
   const plateGeo = new THREE.BoxGeometry(3, 0.06, 2.5);
   const plateMatFront = new THREE.MeshStandardMaterial({
     color: 0xff3333,
@@ -385,7 +385,7 @@ function buildModule2Scene() {
   scene.add(forceArrow);
   addLabel3D(scene, '光泳力 ↑', 0, -0.3, 0, '#22c55e');
 
-  // 分子系统 - 参考模块1的光子系统
+  // 分子系统
   const molecules = [];
   const reflectedMolecules = [];
   const MOLECULE_COLORS = { hot: 0xff6644, cold: 0x4488ff };
@@ -402,18 +402,20 @@ function buildModule2Scene() {
       new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.2 })
     );
     mesh.add(glow);
-    // 从薄板两侧随机位置生成
-    const side = Math.random() > 0.5 ? 1 : -1;
+    // 分子从薄板两侧生成
+    const side = Math.random() > 0.5 ? 1 : -1; // 1=上方(高温), -1=下方(低温)
     mesh.position.set(
       (Math.random()-0.5)*2.5,
-      side * (2 + Math.random()*2) - 1.5,
+      side * (1.5 + Math.random()*1.5) - 1.5,
       (Math.random()-0.5)*1.5
     );
     scene.add(mesh);
-    return { mesh, speed: 2+Math.random()*2, side: side };
+    // 上方分子向下运动，下方分子向上运动
+    const velY = side * (1.5 + Math.random()*1);
+    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, velY, (Math.random()-0.5)*0.3), side: side };
   }
 
-  // 创建初始分子（数量适中）
+  // 创建初始分子
   for (let i = 0; i < 15; i++) molecules.push(createMolecule());
 
   function createReflectedMolecule(pos, isHot) {
@@ -429,8 +431,8 @@ function buildModule2Scene() {
     mesh.position.y += 0.1;
     scene.add(mesh);
     // 高温分子反弹更快更远，低温分子反弹更慢更近
-    const speed = isHot ? (3+Math.random()*2) : (1+Math.random()*0.5);
-    const velY = isHot ? (2+Math.random()*1.5) : (0.5+Math.random()*0.5);
+    const isAbovePlate = pos.y > -1.5;
+    const velY = isHot ? (isAbovePlate ? -(3+Math.random()*2) : (2+Math.random()*1.5)) : (isAbovePlate ? -(0.5+Math.random()*0.5) : (0.8+Math.random()*0.5));
     return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.5, velY, (Math.random()-0.5)*0.5), life: 1.0 };
   }
 
@@ -455,25 +457,26 @@ function buildModule2Scene() {
     for (let i = molecules.length-1; i >= 0; i--) {
       if (molecules.length > 25 && i < molecules.length-5) continue;
       const m = molecules[i];
-      m.mesh.position.y -= m.speed * dt;
+      m.mesh.position.x += m.vel.x * dt;
+      m.mesh.position.y += m.vel.y * dt;
+      m.mesh.position.z += m.vel.z * dt;
 
       // 检测与薄板的碰撞
-      if (m.mesh.position.y <= plateY + 0.06) {
-        // 碰撞点
+      if (Math.abs(m.mesh.position.y - plateY) < 0.08 &&
+          Math.abs(m.mesh.position.x) < 1.5 && Math.abs(m.mesh.position.z) < 1.2) {
         const pos = m.mesh.position.clone();
         scene.remove(m.mesh);
         molecules.splice(i, 1);
 
-        // 根据碰撞位置判断是高温面还是低温面
-        const isHotSide = pos.z > 0; // 前半部分是高温面
+        // 根据碰撞位置判断是高温面还是低温面（z>0是前半部分，高温面）
+        const isHotSide = pos.z > 0;
 
-        // 创建反弹分子
         if (Math.random() < 0.7) {
           reflectedMolecules.push(createReflectedMolecule(pos, isHotSide));
         }
       }
       // 超出边界移除
-      else if (m.mesh.position.y < -5) {
+      else if (Math.abs(m.mesh.position.y) > 4 || Math.abs(m.mesh.position.x) > 3) {
         scene.remove(m.mesh);
         molecules.splice(i, 1);
       }
@@ -483,9 +486,9 @@ function buildModule2Scene() {
     for (let i = reflectedMolecules.length-1; i >= 0; i--) {
       const r = reflectedMolecules[i];
       r.mesh.position.addScaledVector(r.vel, dt);
-      r.life -= dt * 0.5;
+      r.life -= dt * 0.4;
       r.mesh.material.opacity = Math.max(0, r.life);
-      if (r.life <= 0 || r.mesh.position.y > 5) {
+      if (r.life <= 0 || Math.abs(r.mesh.position.y) > 4) {
         scene.remove(r.mesh);
         reflectedMolecules.splice(i, 1);
       }
