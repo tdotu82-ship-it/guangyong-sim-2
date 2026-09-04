@@ -354,39 +354,28 @@ function buildModule2Scene() {
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // 薄板：上半石墨（热，黑色），下半铝箔（冷，银色）
-  // 使用两个半板来表示温差
-  const plateWidth = 3, plateDepth = 2.5, plateThickness = 0.06;
-
-  // 上半部分：石墨（热）
-  const hotPlateGeo = new THREE.BoxGeometry(plateWidth, plateThickness, plateDepth/2);
-  const hotPlateMat = new THREE.MeshStandardMaterial({
-    color: 0x2d2d2d,
-    roughness: 0.9,
-    metalness: 0.1,
-    emissive: 0xff4400,
-    emissiveIntensity: 0.3
+  // 薄板：一块板，正面红色（高温面），背面蓝色（低温面）
+  const plateGeo = new THREE.BoxGeometry(3, 0.06, 2.5);
+  // 创建双面材质：正面红色，背面蓝色
+  const plateMatFront = new THREE.MeshStandardMaterial({
+    color: 0xff3333,
+    emissive: 0xff0000,
+    emissiveIntensity: 0.5,
+    roughness: 0.5
   });
-  const hotPlate = new THREE.Mesh(hotPlateGeo, hotPlateMat);
-  hotPlate.position.set(0, -1.2, plateDepth/4); // 上半部分
-  scene.add(hotPlate);
-
-  // 下半部分：铝箔（冷）
-  const coldPlateGeo = new THREE.BoxGeometry(plateWidth, plateThickness, plateDepth/2);
-  const coldPlateMat = new THREE.MeshStandardMaterial({
-    color: 0xd0d0d0,
-    roughness: 0.2,
-    metalness: 0.9,
+  const plateMatBack = new THREE.MeshStandardMaterial({
+    color: 0x3366ff,
     emissive: 0x0044ff,
-    emissiveIntensity: 0.1
+    emissiveIntensity: 0.2,
+    roughness: 0.5
   });
-  const coldPlate = new THREE.Mesh(coldPlateGeo, coldPlateMat);
-  coldPlate.position.set(0, -1.8, -plateDepth/4); // 下半部分
-  scene.add(coldPlate);
+  const plate = new THREE.Mesh(plateGeo, [plateMatFront, plateMatBack, plateMatFront, plateMatBack, plateMatFront, plateMatBack]);
+  plate.position.set(0, -1.5, 0);
+  scene.add(plate);
 
   // 标签
-  addLabel3D(scene, '石墨面 (热)', 0, -0.8, plateDepth/2 + 0.3, '#ef4444');
-  addLabel3D(scene, '铝箔面 (冷)', 0, -2.2, -(plateDepth/2 + 0.3), '#60a5fa');
+  addLabel3D(scene, '高温面 (光照侧)', 0, -1.0, 0, '#ff3333');
+  addLabel3D(scene, '低温面 (背光侧)', 0, -2.0, 0, '#3366ff');
 
   // 光泳力箭头（向上）
   const forceArrow = new THREE.ArrowHelper(
@@ -408,39 +397,43 @@ function buildModule2Scene() {
 
   // 气体分子系统
   const molecules = [];
-  const MOLECULE_COLORS = { hot: 0xff4444, cold: 0x4488ff };
-  const molGeo = new THREE.SphereGeometry(0.06, 6, 6);
+  const HOT_COLOR = 0xff6644; // 热分子颜色（橙红）
+  const COLD_COLOR = 0x4488ff; // 冷分子颜色（蓝色）
+  const molGeo = new THREE.SphereGeometry(0.05, 6, 6);
   const clock = new THREE.Clock();
   let isPaused = false;
 
   function createMolecule() {
     const mat = new THREE.MeshBasicMaterial({
-      color: MOLECULE_COLORS.cold, // 初始为冷色
+      color: COLD_COLOR,
       transparent: true, opacity: 0.9
     });
     const mesh = new THREE.Mesh(molGeo, mat);
-    // 随机位置（在薄板周围）
+    // 随机位置（在薄板上方和下方）
+    const side = Math.random() > 0.5 ? 1 : -1; // 1=上方, -1=下方
     mesh.position.set(
-      (Math.random()-0.5)*4,
-      (Math.random()-0.5)*3 - 1.5,
+      (Math.random()-0.5)*3.5,
+      side * (1.0 + Math.random()*1.5) - 1.5,
       (Math.random()-0.5)*2
     );
     scene.add(mesh);
     return {
       mesh,
       velocity: new THREE.Vector3(
-        (Math.random()-0.5)*2,
-        (Math.random()-0.5)*2,
-        (Math.random()-0.5)*2
+        (Math.random()-0.5)*0.8,
+        (Math.random()-0.5)*0.8,
+        (Math.random()-0.5)*0.8
       ),
-      baseSpeed: 3 + Math.random()*2,
-      isHot: false,
+      baseSpeed: 1.5 + Math.random()*0.5, // 较慢的速度
+      hitPlate: false,
+      side: side, // 记录分子在板的哪一侧
       life: 1.0,
-      lifeRate: 0.3 + Math.random()*0.2 // 生命周期衰减率
+      lifeRate: 0.2 + Math.random()*0.1 // 较慢的生命周期衰减
     };
   }
 
-  for (let i = 0; i < 60; i++) molecules.push(createMolecule());
+  // 只创建20个分子
+  for (let i = 0; i < 20; i++) molecules.push(createMolecule());
 
   function animate() {
     const id = requestAnimationFrame(animate);
@@ -462,7 +455,7 @@ function buildModule2Scene() {
       m.mesh.position.z += m.velocity.z * m.baseSpeed * dt;
 
       // 边界反弹
-      [2.0, 2.0, 1.5].forEach((b, idx) => {
+      [1.8, 1.8, 1.3].forEach((b, idx) => {
         const axis = ['x', 'y', 'z'][idx];
         if (Math.abs(m.mesh.position[axis]) > b) {
           m.velocity[axis] = -m.velocity[axis];
@@ -470,28 +463,24 @@ function buildModule2Scene() {
         }
       });
 
-      // 与薄板碰撞检测
-      // 热板（石墨）：y ≈ -1.2, z > 0
-      if (Math.abs(m.mesh.position.y - (-1.2)) < 0.08 &&
-          Math.abs(m.mesh.position.x) < 1.5 &&
-          m.mesh.position.z > 0 && Math.abs(m.mesh.position.z) < plateDepth/2) {
-        if (m.velocity.y > 0) { // 从下方撞击热板
-          m.velocity.y = Math.abs(m.velocity.y) * 1.5; // 反弹加速
-          m.isHot = true;
-          m.mesh.material.color.setHex(MOLECULE_COLORS.hot);
-          m.life = 1.0; // 重置生命值
-        }
-      }
+      // 与薄板碰撞检测（板在 y = -1.5）
+      if (!m.hitPlate && Math.abs(m.mesh.position.y - (-1.5)) < 0.05 &&
+          Math.abs(m.mesh.position.x) < 1.5 && Math.abs(m.mesh.position.z) < 1.2) {
 
-      // 冷板（铝箔）：y ≈ -1.8, z < 0
-      if (Math.abs(m.mesh.position.y - (-1.8)) < 0.08 &&
-          Math.abs(m.mesh.position.x) < 1.5 &&
-          m.mesh.position.z < 0 && Math.abs(m.mesh.position.z) < plateDepth/2) {
-        if (m.velocity.y < 0) { // 从上方撞击冷板
-          m.velocity.y = -Math.abs(m.velocity.y) * 0.6; // 反弹减速
-          m.isHot = false;
-          m.mesh.material.color.setHex(MOLECULE_COLORS.cold);
-          m.life = 0.5; // 冷分子寿命更短
+        if (m.velocity.y > 0) {
+          // 从下方撞击薄板（低温面）→ 反弹减速，寿命短
+          m.velocity.y = Math.abs(m.velocity.y) * 0.4; // 大幅减速
+          m.hitPlate = true;
+          m.mesh.material.color.setHex(COLD_COLOR);
+          m.life = 0.4; // 寿命很短
+          m.lifeRate = 0.8; // 快速消失
+        } else if (m.velocity.y < 0) {
+          // 从上方撞击薄板（高温面）→ 反弹加速，寿命长
+          m.velocity.y = -Math.abs(m.velocity.y) * 1.8; // 大幅加速
+          m.hitPlate = true;
+          m.mesh.material.color.setHex(HOT_COLOR);
+          m.life = 1.0; // 寿命长
+          m.lifeRate = 0.15; // 慢速消失
         }
       }
 
@@ -508,7 +497,7 @@ function buildModule2Scene() {
     }
 
     // 补充新分子
-    if (molecules.length < 50 && Math.random() < 0.1) {
+    if (molecules.length < 15 && Math.random() < 0.05) {
       molecules.push(createMolecule());
     }
 
@@ -528,23 +517,11 @@ function buildModule2Scene() {
   document.getElementById('m2ResetBtn')?.addEventListener('click', () => {
     molecules.forEach(m => scene.remove(m.mesh));
     molecules.length = 0;
-    for (let i = 0; i < 60; i++) molecules.push(createMolecule());
+    for (let i = 0; i < 20; i++) molecules.push(createMolecule());
   });
 
   const instance = {
     animId, renderer, controls,
-    onResize: () => {
-      const container = document.getElementById('theoryScene2');
-      if (!container) return;
-      const { w: nw, h: nh } = getContainerSize(container);
-      camera.aspect = nw / nh;
-      camera.updateProjectionMatrix();
-      renderer.setSize(nw, nh);
-    }
-  };
-  sceneInstances['module2'] = instance;
-  return instance;
-}
     onResize: () => {
       const container = document.getElementById('theoryScene2');
       if (!container) return;
