@@ -389,7 +389,7 @@ function buildModule2Scene() {
   const molecules = [];
   const reflectedMolecules = [];
   const MOLECULE_COLORS = { hot: 0xff6644, cold: 0x4488ff };
-  const molGeo = new THREE.SphereGeometry(0.12, 8, 8); // 与模块1相同大小
+  const molGeo = new THREE.SphereGeometry(0.12, 8, 8);
   const clock = new THREE.Clock();
   let isPaused = false;
   let lastMolTime = 0;
