@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>模块2 3D渲染测试</title>
+<style>
+  body { margin: 0; background: #0a0e1a; color: white; font-family: sans-serif; }
+  #testContainer { width: 800px; height: 400px; background: #111827; margin: 20px auto; border: 1px solid #2d3a4f; }
+  #log { width: 800px; margin: 0 auto; padding: 10px; background: #1a2236; }
+  .log-entry { margin: 5px 0; padding: 5px; font-family: monospace; }
+  .success { color: #22c55e; }
+  .error { color: #ef4444; }
+  .info { color: #94a3b8; }
+</style>
+</head>
+<body>
+<h1 style="text-align:center;">模块2 3D渲染测试</h1>
+<div id="testContainer"><div class="three-loading">正在初始化...</div></div>
+<div id="log"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.140.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.140.2/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+function log(msg, type='info') {
+  const logDiv = document.getElementById('log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry ' + type;
+  entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  logDiv.appendChild(entry);
+  console.log(msg);
+}
+
+try {
+  log('开始测试...', 'info');
+
+  // 模拟buildModule2Scene的关键步骤
+  const container = document.getElementById('testContainer');
+  const loading = container.querySelector('.three-loading');
+  if (loading) loading.remove();
+
+  log('创建场景...', 'info');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0e1a);
+  log('✓ 场景创建成功', 'success');
+
+  log('创建相机...', 'info');
+  const camera = new THREE.PerspectiveCamera(50, 800/400, 0.1, 200);
+  camera.position.set(0, 4, 10);
+  camera.lookAt(0, 0, 0);
+  log('✓ 相机创建成功', 'success');
+
+  log('创建渲染器...', 'info');
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(800, 400);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+  log('✓ 渲染器创建成功', 'success');
+
+  log('创建控制器...', 'info');
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  log('✓ 控制器创建成功', 'success');
+
+  // 添加灯光
+  log('添加灯光...', 'info');
+  scene.add(new THREE.AmbientLight(0x1a2a4a, 0.8));
+  const keyLight = new THREE.PointLight(0xffffff, 1.5, 30);
+  keyLight.position.set(3, 6, 5);
+  scene.add(keyLight);
+  log('✓ 灯光添加成功', 'success');
+
+  // 添加实验腔体
+  log('添加实验腔体...', 'info');
+  const chamberGeo = new THREE.BoxGeometry(6, 4, 3.5);
+  const chamberMat = new THREE.MeshStandardMaterial({
+    color: 0x88ccff,
+    transparent: true,
+    opacity: 0.08,
+    side: THREE.DoubleSide,
+    roughness: 0.05
+  });
+  const chamber = new THREE.Mesh(chamberGeo, chamberMat);
+  chamber.position.set(0, 0.5, 0);
+  scene.add(chamber);
+  log('✓ 实验腔体添加成功', 'success');
+
+  // 添加薄板
+  log('添加薄板...', 'info');
+  const plateGeo = new THREE.BoxGeometry(3.2, 0.06, 2.2);
+  const hotMat = new THREE.MeshStandardMaterial({
+    color: 0x2d2d2d, roughness: 0.9, metalness: 0.1,
+    emissive: 0x331100, emissiveIntensity: 0.4
+  });
+  const plate = new THREE.Mesh(plateGeo, hotMat);
+  plate.position.set(0, 0.5, 0);
+  scene.add(plate);
+  log('✓ 薄板添加成功', 'success');
+
+  // 添加光源
+  log('添加光源...', 'info');
+  const lightGeo = new THREE.SphereGeometry(0.35, 16, 16);
+  const lightMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+  const lightSphere = new THREE.Mesh(lightGeo, lightMat);
+  lightSphere.position.set(0, 3, 0);
+  scene.add(lightSphere);
+  log('✓ 光源添加成功', 'success');
+
+  // 添加分子
+  log('添加分子...', 'info');
+  const molecules = [];
+  const MOLECULE_COLORS = { hot: 0xff4444, cold: 0x4488ff };
+  const molGeo = new THREE.SphereGeometry(0.04, 6, 6);
+
+  for (let i = 0; i < 100; i++) {
+    const isHotSide = Math.random() > 0.5;
+    const mat = new THREE.MeshBasicMaterial({
+      color: isHotSide ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold,
+      transparent: true, opacity: 0.85
+    });
+    const mesh = new THREE.Mesh(molGeo, mat);
+    mesh.position.set(
+      (Math.random() - 0.5) * 5,
+      (Math.random() - 0.5) * 3 + 0.5,
+      (Math.random() - 0.5) * 2.5
+    );
+    scene.add(mesh);
+    molecules.push({
+      mesh,
+      velocity: new THREE.Vector3(
+        (Math.random() - 0.5) * 1.2,
+        (Math.random() - 0.5) * 1.2,
+        (Math.random() - 0.5) * 1.2
+      ),
+      baseSpeed: 0.3 + Math.random() * 1.0
+    });
+  }
+  log('✓ 分子添加成功 (数量: ' + molecules.length + ')', 'success');
+
+  // 动画循环
+  log('启动动画循环...', 'info');
+  let isPaused = false;
+  const clock = new THREE.Clock();
+
+  function animate() {
+    if (isPaused) return;
+    requestAnimationFrame(animate);
+
+    const dt = Math.min(clock.getDelta(), 0.05);
+    const time = clock.getElapsedTime();
+
+    // 更新分子位置
+    molecules.forEach(m => {
+      m.mesh.position.x += m.velocity.x * m.baseSpeed * dt;
+      m.mesh.position.y += m.velocity.y * m.baseSpeed * dt;
+      m.mesh.position.z += m.velocity.z * m.baseSpeed * dt;
+
+      // 边界反弹
+      [2.8, 1.8, 1.5].forEach((b, idx) => {
+        const axis = ['x', 'y', 'z'][idx];
+        if (Math.abs(m.mesh.position[axis]) > b) {
+          m.velocity[axis] = -Math.abs(m.velocity[axis]);
+          m.mesh.position[axis] = Math.sign(m.mesh.position[axis]) * b;
+        }
+      });
+    });
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  animate();
+  log('✓ 动画循环启动成功', 'success');
+  log('3D场景渲染测试完成！', 'success');
+
+} catch (error) {
+  log('错误: ' + error.message, 'error');
+  log('堆栈: ' + error.stack, 'error');
+}
+</script>
+</body>
+</html>

@@ -307,178 +307,114 @@ function buildModule2Scene() {
   if (!container) return null;
   const { w, h } = getContainerSize(container);
 
-  // ===== 场景 =====
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0e1a);
+  const camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 100);
+  camera.position.set(0, 2, 9);
+  camera.lookAt(0, -0.5, 0);
 
-  // ===== 相机 =====
-  const camera = new THREE.PerspectiveCamera(50, w/h, 0.1, 200);
-  camera.position.set(0, 4, 10);
-  camera.lookAt(0, 0, 0);
-
-  // ===== 渲染器 =====
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  // 移除loading
   const loading = container.querySelector('.three-loading');
   if (loading) loading.remove();
   container.appendChild(renderer.domElement);
 
-  // ===== 控制器 =====
   const controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.minDistance = 4;
-  controls.maxDistance = 20;
+  controls.minDistance = 5; controls.maxDistance = 20;
+  controls.target.set(0, -0.5, 0);
 
-  // ===== 灯光 =====
+  addStars(scene, 400);
+  addGrid(scene, 20);
   scene.add(new THREE.AmbientLight(0x1a2a4a, 0.8));
-  const keyLight = new THREE.PointLight(0xffffff, 1.5, 30);
-  keyLight.position.set(3, 6, 5);
-  scene.add(keyLight);
-  const fillLight = new THREE.PointLight(0x3b82f6, 0.4, 20);
-  fillLight.position.set(-3, 3, -3);
-  scene.add(fillLight);
+  const pointLight = new THREE.PointLight(0xfbbf24, 4, 30);
+  pointLight.position.set(0, 8, 2);
+  scene.add(pointLight);
 
-  // ===== 实验腔体（透明盒子）=====
-  const chamberGeo = new THREE.BoxGeometry(6, 4, 3.5);
-  const chamberMat = new THREE.MeshStandardMaterial({
-    color: 0x88ccff,
-    transparent: true,
-    opacity: 0.08,
-    side: THREE.DoubleSide,
-    roughness: 0.05
-  });
-  const chamber = new THREE.Mesh(chamberGeo, chamberMat);
-  chamber.position.set(0, 0.5, 0);
-  scene.add(chamber);
-
-  // 腔体边框
-  const chamberEdges = new THREE.EdgesGeometry(chamberGeo);
-  const chamberLines = new THREE.LineSegments(
-    chamberEdges,
-    new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.4 })
-  );
-  chamberLines.position.copy(chamber.position);
-  scene.add(chamberLines);
-
-  // ===== 薄板（石墨上/铝箔下）=====
-  const plateGeo = new THREE.BoxGeometry(3.2, 0.06, 2.2);
-  const hotMat = new THREE.MeshStandardMaterial({
-    color: 0x2d2d2d, roughness: 0.9, metalness: 0.1,
-    emissive: 0x331100, emissiveIntensity: 0.4
-  });
-  const coldMat = new THREE.MeshStandardMaterial({
-    color: 0xd0d0d0, roughness: 0.2, metalness: 0.9,
-    emissive: 0x001122, emissiveIntensity: 0.1
-  });
-  const plate = new THREE.Mesh(plateGeo, hotMat);
-  plate.position.set(0, 0.5, 0);
-  scene.add(plate);
-
-  // 石墨面标签
-  const hotLabel = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.8, 0.4),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.CanvasTexture(createTextCanvas('石墨面 (热)', '#ef4444')),
-      transparent: true, side: THREE.DoubleSide
-    })
-  );
-  hotLabel.position.set(0, 0.58, 1.3);
-  scene.add(hotLabel);
-
-  // 铝箔面标签
-  const coldLabel = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.8, 0.4),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.CanvasTexture(createTextCanvas('铝箔面 (冷)', '#60a5fa')),
-      transparent: true, side: THREE.DoubleSide
-    })
-  );
-  coldLabel.position.set(0, 0.42, 1.3);
-  coldLabel.rotation.x = Math.PI;
-  scene.add(coldLabel);
-
-  // ===== 光源 =====
-  const lightGeo = new THREE.SphereGeometry(0.35, 16, 16);
+  // 光源
+  const lightGeo = new THREE.SphereGeometry(0.6, 16, 16);
   const lightMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
   const lightSphere = new THREE.Mesh(lightGeo, lightMat);
-  lightSphere.position.set(0, 3, 0);
+  lightSphere.position.set(0, 6, 0);
   scene.add(lightSphere);
-  for (let i = 2; i >= 1; i--) {
+  for (let i = 3; i >= 1; i--) {
     lightSphere.add(new THREE.Mesh(
-      new THREE.SphereGeometry(0.35 + i * 0.15, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.06 / i })
+      new THREE.SphereGeometry(0.6 + i*0.25, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.06/i })
     ));
   }
 
   // 光锥
-  const beamGeo = new THREE.ConeGeometry(1.8, 3, 32, 1, true);
-  const beamMat = new THREE.MeshBasicMaterial({
-    color: 0xfbbf24, transparent: true, opacity: 0.04, side: THREE.DoubleSide
-  });
+  const beamGeo = new THREE.ConeGeometry(2.5, 7, 32, 1, true);
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.04, side: THREE.DoubleSide });
   const beam = new THREE.Mesh(beamGeo, beamMat);
-  beam.position.set(0, 1.5, 0);
+  beam.position.set(0, 2.5, 0);
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // ===== 气体分子 =====
+  // 薄板（水平放置，上半石墨/下半铝箔）
+  const plateGeo = new THREE.BoxGeometry(3, 0.06, 2.5);
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0x2d2d2d, roughness: 0.9, metalness: 0.1, emissive: 0x331100, emissiveIntensity: 0.4 });
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.set(0, -1.5, 0);
+  scene.add(plate);
+
+  // 标签
+  addLabel3D(scene, '石墨面 (热)', 0, -2.0, 0, '#ef4444');
+  addLabel3D(scene, '光泳力 ↑', 0, -2.6, 0, '#22c55e');
+
+  // 光泳力箭头
+  const forceArrow = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0),
+    new THREE.Vector3(0, -1.0, 0),
+    1.5, 0x22c55e, 0.3, 0.15
+  );
+  scene.add(forceArrow);
+
+  // 公式
+  const formulaCanvas = createTextCanvas('F_pp = K · ΔT · (dλ/dT)', '#22c55e', 512, 64);
+  const formulaMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(4, 0.5),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(formulaCanvas), transparent: true, side: THREE.DoubleSide })
+  );
+  formulaMesh.position.set(0, -3.0, 0);
+  scene.add(formulaMesh);
+
+  // 气体分子系统
   const molecules = [];
   const MOLECULE_COLORS = { hot: 0xff4444, cold: 0x4488ff };
-  const molGeo = new THREE.SphereGeometry(0.04, 6, 6);
+  const molGeo = new THREE.SphereGeometry(0.08, 6, 6);
+  const clock = new THREE.Clock();
+  let isPaused = false;
+  let lastPhotonTime = 0;
 
   function createMolecule() {
-    const isHotSide = Math.random() > 0.5;
     const mat = new THREE.MeshBasicMaterial({
-      color: isHotSide ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold,
+      color: Math.random() > 0.5 ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold,
       transparent: true, opacity: 0.85
     });
     const mesh = new THREE.Mesh(molGeo, mat);
     mesh.position.set(
-      (Math.random() - 0.5) * 5,
-      (Math.random() - 0.5) * 3 + 0.5,
-      (Math.random() - 0.5) * 2.5
+      (Math.random()-0.5)*5,
+      (Math.random()-0.5)*3 - 1.5,
+      (Math.random()-0.5)*2.5
     );
     scene.add(mesh);
     return {
       mesh,
       velocity: new THREE.Vector3(
-        (Math.random() - 0.5) * 1.2,
-        (Math.random() - 0.5) * 1.2,
-        (Math.random() - 0.5) * 1.2
+        (Math.random()-0.5)*1.5,
+        (Math.random()-0.5)*1.5,
+        (Math.random()-0.5)*1.5
       ),
-      baseSpeed: 0.3 + Math.random() * 1.0,
-      hitHot: isHotSide,
-      lastHitTime: 0
+      baseSpeed: 2 + Math.random()*2,
+      isHot: Math.random() > 0.5
     };
   }
 
-  let moleculeCount = 100;
-  for (let i = 0; i < moleculeCount; i++) molecules.push(createMolecule());
-
-  // ===== 光泳力箭头 =====
-  const forceArrow = new THREE.ArrowHelper(
-    new THREE.Vector3(0, 1, 0),
-    new THREE.Vector3(2.5, -1.2, 0),
-    1.0, 0x22c55e, 0.25, 0.12
-  );
-  scene.add(forceArrow);
-  const ppLabel = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.2, 0.3),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.CanvasTexture(createTextCanvas('光泳力 ↑', '#22c55e')),
-      transparent: true, side: THREE.DoubleSide
-    })
-  );
-  ppLabel.position.set(2.5, -0.3, 0);
-  scene.add(ppLabel);
-
-  // ===== 动画 =====
-  let isPaused = false;
-  let pressureRatio = 0.5, intensityRatio = 0.5;
-  const clock = new THREE.Clock();
+  for (let i = 0; i < 80; i++) molecules.push(createMolecule());
 
   function animate() {
     const id = requestAnimationFrame(animate);
@@ -487,109 +423,45 @@ function buildModule2Scene() {
     const dt = Math.min(clock.getDelta(), 0.05);
     const time = clock.getElapsedTime();
 
-    // 光源动画
-    lightSphere.scale.setScalar(1 + 0.08 * Math.sin(time * 3));
-    const hotBoost = 1 + intensityRatio * 1.5;
-    plate.material.emissiveIntensity = 0.4 + intensityRatio * 0.4;
+    lightSphere.scale.setScalar(1 + 0.08*Math.sin(time*3));
+    beam.material.opacity = 0.04 + 0.02*Math.sin(time*3);
 
-    // 分子运动（气压影响速度）
-    const pressureSpeedFactor = 0.5 + pressureRatio * 1.5;
+    // 更新分子
     molecules.forEach(m => {
-      const speed = m.baseSpeed * pressureSpeedFactor * (m.hitHot ? hotBoost : 1);
+      const speed = m.baseSpeed * (m.isHot ? 1.5 : 0.8);
       m.mesh.position.x += m.velocity.x * speed * dt;
       m.mesh.position.y += m.velocity.y * speed * dt;
       m.mesh.position.z += m.velocity.z * speed * dt;
 
-      // 与热板碰撞
-      if (m.mesh.position.y > 0.53 && m.mesh.position.y < 1.0 &&
-          Math.abs(m.mesh.position.x) < 1.8 && Math.abs(m.mesh.position.z) < 1.3) {
-        if (m.velocity.y > 0) {
-          // 热板反弹 - 显著加速，颜色变亮红
-          m.velocity.y = -Math.abs(m.velocity.y) * (1.2 + Math.random() * 0.5) * hotBoost;
-          m.hitHot = true;
-          m.lastHitTime = time;
-          // 颜色从红渐变到亮橙红
-          const t = Math.min(1, (time - m.lastHitTime) * 2);
-          m.mesh.material.color.setRGB(
-            1, 0.2 + t * 0.3, 0.2 + t * 0.1
-          );
-        }
-      }
-      // 与冷板碰撞（y < 0.5）
-      if (m.mesh.position.y < 0.47 && m.mesh.position.y > -0.5 &&
-          Math.abs(m.mesh.position.x) < 1.8 && Math.abs(m.mesh.position.z) < 1.3) {
-        if (m.velocity.y < 0) {
-          // 冷板反弹 - 减速，颜色变深蓝
-          m.velocity.y = Math.abs(m.velocity.y) * 0.6;
-          m.hitHot = false;
-          m.lastHitTime = time;
-          const tc = Math.min(1, (time - m.lastHitTime) * 2);
-          m.mesh.material.color.setRGB(0.2 + tc * 0.1, 0.4 + tc * 0.2, 1);
-        }
-      }
-      // 远离热板时颜色逐渐回归冷色
-      if (!m.hitHot && time - m.lastHitTime > 0.5) {
-        const fade = Math.min(1, (time - m.lastHitTime) * 0.5);
-        m.mesh.material.color.lerpColors(
-          new THREE.Color(MOLECULE_COLORS.hot),
-          new THREE.Color(MOLECULE_COLORS.cold),
-          fade
-        );
-      }
-
-      // 腔体边界
-      [2.8, 1.8, 1.5].forEach((b, idx) => {
+      // 边界反弹
+      [2.5, 2.0, 1.5].forEach((b, idx) => {
         const axis = ['x', 'y', 'z'][idx];
         if (Math.abs(m.mesh.position[axis]) > b) {
-          m.velocity[axis] = -Math.abs(m.velocity[axis]);
+          m.velocity[axis] = -m.velocity[axis];
           m.mesh.position[axis] = Math.sign(m.mesh.position[axis]) * b;
         }
       });
+
+      // 与薄板碰撞
+      if (Math.abs(m.mesh.position.y - (-1.5)) < 0.1 &&
+          Math.abs(m.mesh.position.x) < 1.5 && Math.abs(m.mesh.position.z) < 1.2) {
+        if (m.velocity.y > 0) {
+          m.velocity.y = -Math.abs(m.velocity.y) * 1.2;
+          m.isHot = true;
+          m.mesh.material.color.setHex(0xff6644);
+        }
+      }
     });
 
-    // 光泳力箭头（脉冲效果）
-    const netForce = (intensityRatio - 0.5) * 0.3 + pressureRatio * 0.2;
-    const arrowLen = Math.max(0.2, Math.min(1.0, Math.abs(netForce) * 2.5));
-    const pulse = 1 + 0.15 * Math.sin(time * 5);
-    forceArrow.setLength(arrowLen * pulse, 0.25, 0.12);
-    forceArrow.color.setHex(netForce > 0 ? 0x22c55e : 0x6b728a);
-    ppLabel.position.set(2.5, arrowLen / 2 - 0.3, 0);
-
-    // 更新显示
-    const el = document.getElementById('netForce');
-    if (el) el.textContent = (Math.abs(netForce) * 10).toFixed(2) + ' μN';
-
-    // 更新分子数量HUD
-    const hudEl = document.getElementById('molCountHUD');
-    if (hudEl) hudEl.textContent = `分子: ${molecules.length}`;
+    // 箭头脉冲
+    const pulse = 0.85 + 0.15*Math.sin(time*4);
+    forceArrow.setLength(1.5*pulse, 0.3, 0.15);
 
     controls.update();
     renderer.render(scene, camera);
   }
   const animId = animate();
 
-  // ===== 控件绑定 =====
-  // 添加分子数量HUD
-  const hudEl = document.createElement('div');
-  hudEl.id = 'molCountHUD';
-  hudEl.style.cssText = 'position:absolute;bottom:8px;left:8px;color:#94a3b8;font-size:11px;font-family:monospace;pointer-events:none;';
-  hudEl.textContent = `分子: ${moleculeCount}`;
-  container.appendChild(hudEl);
-
-  document.getElementById('pressureSlider')?.addEventListener('input', (e) => {
-    pressureRatio = parseInt(e.target.value) / 100;
-    document.getElementById('pressureValue').textContent = e.target.value + '%';
-    const target = Math.round(pressureRatio * 200);
-    if (Math.abs(target - molecules.length) > 20) {
-      molecules.forEach(m => scene.remove(m.mesh));
-      molecules.length = 0;
-      for (let i = 0; i < Math.min(target, 200); i++) molecules.push(createMolecule());
-    }
-  });
-  document.getElementById('intensitySlider')?.addEventListener('input', (e) => {
-    intensityRatio = parseInt(e.target.value) / 100;
-    document.getElementById('intensityValue').textContent = e.target.value + '%';
-  });
   document.getElementById('m2PauseBtn')?.addEventListener('click', () => {
     isPaused = !isPaused;
     document.getElementById('m2PauseBtn').textContent = isPaused ? '▶ 播放' : '⏸ 暂停';
@@ -597,13 +469,7 @@ function buildModule2Scene() {
   document.getElementById('m2ResetBtn')?.addEventListener('click', () => {
     molecules.forEach(m => scene.remove(m.mesh));
     molecules.length = 0;
-    for (let i = 0; i < moleculeCount; i++) molecules.push(createMolecule());
-    pressureRatio = 0.5;
-    intensityRatio = 0.5;
-    if (document.getElementById('pressureSlider')) document.getElementById('pressureSlider').value = 50;
-    if (document.getElementById('intensitySlider')) document.getElementById('intensitySlider').value = 50;
-    if (document.getElementById('pressureValue')) document.getElementById('pressureValue').textContent = '50%';
-    if (document.getElementById('intensityValue')) document.getElementById('intensityValue').textContent = '50%';
+    for (let i = 0; i < 80; i++) molecules.push(createMolecule());
   });
 
   const instance = {
