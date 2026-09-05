@@ -368,14 +368,22 @@ function buildModule2Scene() {
     emissiveIntensity: 0.2,
     roughness: 0.5
   });
-  // BoxGeometry材质顺序：右、左、顶、底、前、后
-  const plate = new THREE.Mesh(plateGeo, [plateMatTop, plateMatTop, plateMatTop, plateMatBottom, plateMatTop, plateMatTop]);
+  // BoxGeometry材质顺序：右(x+), 左(x-), 顶(y+), 底(y-), 前(z+), 后(z-)
+  // 顶面和前面/后面涂红色（高温侧），底面和左面/右面涂蓝色（低温侧）
+  const plate = new THREE.Mesh(plateGeo, [
+    plateMatBottom,  // 右
+    plateMatBottom,  // 左
+    plateMatTop,     // 顶
+    plateMatBottom,  // 底
+    plateMatTop,     // 前
+    plateMatTop      // 后
+  ]);
   plate.position.set(0, -1.5, 0);
   scene.add(plate);
 
   addLabel3D(scene, '薄板', 0, -2.0, 0, '#fbbf24');
-  addLabel3D(scene, '高温侧', 0, -1.3, 0, '#ff3333');
-  addLabel3D(scene, '低温侧', 0, -1.7, 0, '#3366ff');
+  addLabel3D(scene, '高温侧', 0, -1.0, 1.5, '#ff3333');
+  addLabel3D(scene, '低温侧', 0, -2.0, 1.5, '#3366ff');
   addLabel3D(scene, 'F ↓', 0, -2.6, 0, '#ef4444');
 
   const forceArrow = new THREE.ArrowHelper(
