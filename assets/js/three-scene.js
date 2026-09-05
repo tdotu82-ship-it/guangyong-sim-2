@@ -380,8 +380,8 @@ function buildModule2Scene() {
   const plate = topPlate;
 
   addLabel3D(scene, '薄板', 0, -2.0, 0, '#fbbf24');
-  addLabel3D(scene, '高温侧', 0, -1.0, 1.8, '#ff3333');
-  addLabel3D(scene, '低温侧', 0, -2.0, 1.8, '#3366ff');
+  addLabel3D(scene, '高温侧', 0, -0.5, 1.8, '#ff3333');
+  addLabel3D(scene, '低温侧', 0, -2.5, 1.8, '#3366ff');
   addLabel3D(scene, 'F ↓', 0, -2.6, 0, '#ef4444');
 
   const forceArrow = new THREE.ArrowHelper(
