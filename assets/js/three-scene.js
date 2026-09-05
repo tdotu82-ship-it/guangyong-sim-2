@@ -371,21 +371,12 @@ function buildModule2Scene() {
   );
   scene.add(forceArrow);
 
-  const formulaCanvas = createTextCanvas('F = P(2ρ+α) / (c·cos²θ)', '#fbbf24', 512, 64);
-  const formulaMesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(4, 0.5),
-    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(formulaCanvas), transparent: true, side: THREE.DoubleSide })
-  );
-  formulaMesh.position.set(0, -3.0, 0);
-  scene.add(formulaMesh);
-
   // 光子系统
   const photons = [];
   const sparkParticles = [];
   const photonGeo = new THREE.SphereGeometry(0.12, 8, 8);
   const clock = new THREE.Clock();
   let isPaused = false;
-  let showForces = true;
   let lastPhotonTime = 0;
 
   function createPhoton() {
@@ -419,7 +410,30 @@ function buildModule2Scene() {
     return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, 2+Math.random()*1.5, (Math.random()-0.5)*0.3), life: 1.0 };
   }
 
+  function createBottomPhoton() {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.9 });
+    const mesh = new THREE.Mesh(photonGeo, mat);
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.2 })
+    );
+    mesh.add(glow);
+    mesh.position.set((Math.random()-0.5)*2, -5.5, (Math.random()-0.5)*1.5);
+    scene.add(mesh);
+    return { mesh, speed: 7+Math.random()*3, fromBottom: true };
+  }
+
+  function createReflectedBottomPhoton(pos) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.6 });
+    const mesh = new THREE.Mesh(photonGeo, mat);
+    mesh.position.copy(pos);
+    mesh.position.y -= 0.1;
+    scene.add(mesh);
+    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, -(2+Math.random()*1.5), (Math.random()-0.5)*0.3), life: 1.0 };
+  }
+
   for (let i = 0; i < 20; i++) photons.push(createPhoton());
+  for (let i = 0; i < 20; i++) photons.push(createBottomPhoton());
 
   function animate() {
     const id = requestAnimationFrame(animate);
@@ -434,6 +448,7 @@ function buildModule2Scene() {
     if (time - lastPhotonTime > 0.18) {
       lastPhotonTime = time;
       photons.push(createPhoton());
+      photons.push(createBottomPhoton());
     }
 
     const plateY = -1.5;
@@ -477,7 +492,6 @@ function buildModule2Scene() {
     photons.forEach(p => scene.remove(p.mesh)); photons.length = 0;
     sparkParticles.forEach(s => scene.remove(s.mesh)); sparkParticles.length = 0;
   });
-  document.getElementById('m1ShowForces')?.addEventListener('change', (e) => { showForces = e.target.checked; });
 
   const instance = {
     animId, renderer, controls,
