@@ -455,17 +455,32 @@ function buildModule2Scene() {
     for (let i = photons.length-1; i >= 0; i--) {
       if (photons.length > 35 && i < photons.length-8) continue;
       const p = photons[i];
-      p.mesh.position.y -= p.speed * dt;
-      if (p.mesh.position.y <= plateY + 0.06) {
-        if (Math.random() < 0.85) {
-          sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
-        } else {
-          for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
+      // 判断是从上方还是下方来的
+      if (p.fromBottom) {
+        p.mesh.position.y += p.speed * dt; // 向上移动
+        if (p.mesh.position.y >= plateY - 0.06) {
+          if (Math.random() < 0.85) {
+            sparkParticles.push(createReflectedBottomPhoton(p.mesh.position.clone()));
+          } else {
+            for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
+          }
+          scene.remove(p.mesh);
+          photons.splice(i, 1);
         }
-        scene.remove(p.mesh);
-        photons.splice(i, 1);
+        if (p.mesh.position.y > 5) { scene.remove(p.mesh); photons.splice(i, 1); }
+      } else {
+        p.mesh.position.y -= p.speed * dt; // 向下移动
+        if (p.mesh.position.y <= plateY + 0.06) {
+          if (Math.random() < 0.85) {
+            sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
+          } else {
+            for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
+          }
+          scene.remove(p.mesh);
+          photons.splice(i, 1);
+        }
+        if (p.mesh.position.y < -5) { scene.remove(p.mesh); photons.splice(i, 1); }
       }
-      if (p.mesh.position.y < -5) { scene.remove(p.mesh); photons.splice(i, 1); }
     }
 
     for (let i = sparkParticles.length-1; i >= 0; i--) {
