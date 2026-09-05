@@ -495,8 +495,8 @@ function buildModule2Scene() {
         if (p.mesh.position.y > 5) { scene.remove(p.mesh); photons.splice(i, 1); }
       } else {
         p.mesh.position.y -= p.speed * dt; // 向下移动
-        // 碰撞检测：从上方打到上层板上表面（y = -1.47 - 0.03 = -1.44）
-        if (p.mesh.position.y <= -1.44) {
+        // 碰撞检测：从上方打到板上（y = -1.50）
+        if (p.mesh.position.y <= -1.50) {
           if (Math.random() < 0.85) {
             sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
           } else {
