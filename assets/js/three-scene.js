@@ -431,26 +431,26 @@ function buildModule2Scene() {
     lightSphere.scale.setScalar(1 + 0.08*Math.sin(time*3));
     beam.material.opacity = 0.04 + 0.02*Math.sin(time*3);
 
-    if (time - lastMolTime > 0.18) {
-      lastMolTime = time;
-      molecules.push(createMolecule());
+    if (time - lastPhotonTime > 0.18) {
+      lastPhotonTime = time;
+      photons.push(createPhoton());
     }
 
     const plateY = -1.5;
-    for (let i = molecules.length-1; i >= 0; i--) {
-      if (molecules.length > 35 && i < molecules.length-8) continue;
-      const m = molecules[i];
-      m.mesh.position.y -= m.speed * dt;
-      if (m.mesh.position.y <= plateY + 0.06) {
+    for (let i = photons.length-1; i >= 0; i--) {
+      if (photons.length > 35 && i < photons.length-8) continue;
+      const p = photons[i];
+      p.mesh.position.y -= p.speed * dt;
+      if (p.mesh.position.y <= plateY + 0.06) {
         if (Math.random() < 0.85) {
-          sparkParticles.push(createBouncedMolecule(m.mesh.position.clone()));
+          sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
         } else {
-          for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(m.mesh.position.clone()));
+          for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
         }
-        scene.remove(m.mesh);
-        molecules.splice(i, 1);
+        scene.remove(p.mesh);
+        photons.splice(i, 1);
       }
-      if (m.mesh.position.y < -5) { scene.remove(m.mesh); molecules.splice(i, 1); }
+      if (p.mesh.position.y < -5) { scene.remove(p.mesh); photons.splice(i, 1); }
     }
 
     for (let i = sparkParticles.length-1; i >= 0; i--) {
