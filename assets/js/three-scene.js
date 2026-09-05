@@ -354,14 +354,28 @@ function buildModule2Scene() {
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // 薄板
-  const plateGeo = new THREE.BoxGeometry(3, 0.06, 2.5);
-  const plateMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 });
-  const plate = new THREE.Mesh(plateGeo, plateMat);
+  // 薄板（厚度加倍，双面不同颜色）
+  const plateGeo = new THREE.BoxGeometry(3, 0.12, 2.5);
+  const plateMatTop = new THREE.MeshStandardMaterial({
+    color: 0xff3333,
+    emissive: 0xff0000,
+    emissiveIntensity: 0.3,
+    roughness: 0.5
+  });
+  const plateMatBottom = new THREE.MeshStandardMaterial({
+    color: 0x3366ff,
+    emissive: 0x0044ff,
+    emissiveIntensity: 0.2,
+    roughness: 0.5
+  });
+  // BoxGeometry材质顺序：右、左、顶、底、前、后
+  const plate = new THREE.Mesh(plateGeo, [plateMatTop, plateMatTop, plateMatTop, plateMatBottom, plateMatTop, plateMatTop]);
   plate.position.set(0, -1.5, 0);
   scene.add(plate);
 
   addLabel3D(scene, '薄板', 0, -2.0, 0, '#fbbf24');
+  addLabel3D(scene, '高温侧', 0, -1.3, 0, '#ff3333');
+  addLabel3D(scene, '低温侧', 0, -1.7, 0, '#3366ff');
   addLabel3D(scene, 'F ↓', 0, -2.6, 0, '#ef4444');
 
   const forceArrow = new THREE.ArrowHelper(
