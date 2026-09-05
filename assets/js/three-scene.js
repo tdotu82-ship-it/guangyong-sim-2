@@ -399,13 +399,14 @@ function buildModule2Scene() {
     const mat = new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.9 });
     const mesh = new THREE.Mesh(molGeo, mat);
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.22, 8, 8),
-      new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.2 })
+      new THREE.SphereGeometry(0.25, 8, 8),
+      new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.3 })
     );
     mesh.add(glow);
     mesh.position.set((Math.random()-0.5)*2.5, side==='top' ? 5.5 : -5.5, (Math.random()-0.5)*1.5);
     scene.add(mesh);
-    return { mesh, speed: 7+Math.random()*3, side: side };
+    // 放慢速度，让碰撞过程清晰可见
+    return { mesh, speed: 2.5+Math.random()*1.5, side: side };
   }
 
   function createSpark(pos) {
@@ -419,13 +420,18 @@ function buildModule2Scene() {
 
   function createBouncedMolecule(pos, isHotSide) {
     const color = isHotSide ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold;
-    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.7 });
+    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.85 });
     const mesh = new THREE.Mesh(molGeo, mat);
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25, 8, 8),
+      new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.3 })
+    );
+    mesh.add(glow);
     mesh.position.copy(pos);
     mesh.position.y += 0.1;
     scene.add(mesh);
-    // 反弹速度：远离平板，高温侧更快
-    const baseSpeed = isHotSide ? 2+Math.random()*2 : 0.8+Math.random()*0.5;
+    // 反弹速度：高温侧更快更远，低温侧更慢更近
+    const baseSpeed = isHotSide ? 1.8+Math.random()*1.2 : 0.6+Math.random()*0.4;
     return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, baseSpeed, (Math.random()-0.5)*0.3), life: 1.0 };
   }
 
@@ -486,7 +492,7 @@ function buildModule2Scene() {
     for (let i = sparkParticles.length-1; i >= 0; i--) {
       const s = sparkParticles[i];
       s.mesh.position.addScaledVector(s.vel, dt);
-      s.life -= dt * 0.6;
+      s.life -= dt * 0.3;  // 延长存活时间，让反弹更明显
       s.mesh.material.opacity = Math.max(0, s.life);
       if (s.life <= 0 || s.mesh.position.y > 10 || s.mesh.position.y < -10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
     }
