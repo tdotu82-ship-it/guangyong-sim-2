@@ -262,7 +262,7 @@ function buildModule1Scene() {
       s.mesh.position.addScaledVector(s.vel, dt);
       s.life -= dt * 0.6;
       s.mesh.material.opacity = Math.max(0, s.life);
-      if (s.life <= 0 || s.mesh.position.y > 10 || s.mesh.position.y < -10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
+      if (s.life <= 0 || s.mesh.position.y > 10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
     }
 
     const pulse = 0.85 + 0.15*Math.sin(time*4);
@@ -354,34 +354,14 @@ function buildModule2Scene() {
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // 薄板（上半截红色高温侧，下半截蓝色低温侧）
-  const plateW = 3, plateH = 0.06, plateD = 2.5;
-  const plateMatTop = new THREE.MeshStandardMaterial({
-    color: 0xff3333,
-    emissive: 0xff0000,
-    emissiveIntensity: 0.3,
-    roughness: 0.5
-  });
-  const plateMatBottom = new THREE.MeshStandardMaterial({
-    color: 0x3366ff,
-    emissive: 0x0044ff,
-    emissiveIntensity: 0.2,
-    roughness: 0.5
-  });
-  // 上半板（红色）
-  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(plateW, plateH, plateD), plateMatTop);
-  topPlate.position.set(0, -1.47, 0);
-  scene.add(topPlate);
-  // 下半板（蓝色）
-  const bottomPlate = new THREE.Mesh(new THREE.BoxGeometry(plateW, plateH, plateD), plateMatBottom);
-  bottomPlate.position.set(0, -1.53, 0);
-  scene.add(bottomPlate);
-  // 合并为一个引用用于后续操作
-  const plate = topPlate;
+  // 薄板
+  const plateGeo = new THREE.BoxGeometry(3, 0.06, 2.5);
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 });
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.set(0, -1.5, 0);
+  scene.add(plate);
 
   addLabel3D(scene, '薄板', 0, -2.0, 0, '#fbbf24');
-  addLabel3D(scene, '高温侧', 0, -0.5, 1.8, '#ff3333');
-  addLabel3D(scene, '低温侧', 0, -2.5, 1.8, '#3366ff');
   addLabel3D(scene, 'F ↓', 0, -2.6, 0, '#ef4444');
 
   const forceArrow = new THREE.ArrowHelper(
@@ -391,12 +371,21 @@ function buildModule2Scene() {
   );
   scene.add(forceArrow);
 
+  const formulaCanvas = createTextCanvas('F = P(2ρ+α) / (c·cos²θ)', '#fbbf24', 512, 64);
+  const formulaMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(4, 0.5),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(formulaCanvas), transparent: true, side: THREE.DoubleSide })
+  );
+  formulaMesh.position.set(0, -3.0, 0);
+  scene.add(formulaMesh);
+
   // 光子系统
   const photons = [];
   const sparkParticles = [];
   const photonGeo = new THREE.SphereGeometry(0.12, 8, 8);
   const clock = new THREE.Clock();
   let isPaused = false;
+  let showForces = true;
   let lastPhotonTime = 0;
 
   function createPhoton() {
@@ -422,7 +411,7 @@ function buildModule2Scene() {
   }
 
   function createReflectedPhoton(pos) {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.6 });
+    const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.6 });
     const mesh = new THREE.Mesh(photonGeo, mat);
     mesh.position.copy(pos);
     mesh.position.y += 0.1;
@@ -430,30 +419,7 @@ function buildModule2Scene() {
     return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, 2+Math.random()*1.5, (Math.random()-0.5)*0.3), life: 1.0 };
   }
 
-  function createBottomPhoton() {
-    const mat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.9 });
-    const mesh = new THREE.Mesh(photonGeo, mat);
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.22, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.2 })
-    );
-    mesh.add(glow);
-    mesh.position.set((Math.random()-0.5)*2, -5.5, (Math.random()-0.5)*1.5);
-    scene.add(mesh);
-    return { mesh, speed: 4+Math.random()*2, fromBottom: true };
-  }
-
-  function createReflectedBottomPhoton(pos) {
-    const mat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.6 });
-    const mesh = new THREE.Mesh(photonGeo, mat);
-    mesh.position.copy(pos);
-    mesh.position.y -= 0.1;
-    scene.add(mesh);
-    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, -(2+Math.random()*1.5), (Math.random()-0.5)*0.3), life: 1.0 };
-  }
-
   for (let i = 0; i < 20; i++) photons.push(createPhoton());
-  for (let i = 0; i < 20; i++) photons.push(createBottomPhoton());
 
   function animate() {
     const id = requestAnimationFrame(animate);
@@ -468,45 +434,23 @@ function buildModule2Scene() {
     if (time - lastPhotonTime > 0.18) {
       lastPhotonTime = time;
       photons.push(createPhoton());
-      photons.push(createPhoton());
-      photons.push(createPhoton());
-      photons.push(createPhoton());
-      photons.push(createPhoton());
-      photons.push(createBottomPhoton());
     }
 
     const plateY = -1.5;
     for (let i = photons.length-1; i >= 0; i--) {
       if (photons.length > 35 && i < photons.length-8) continue;
       const p = photons[i];
-      // 判断是从上方还是下方来的
-      if (p.fromBottom) {
-        p.mesh.position.y += p.speed * dt; // 向上移动
-        // 碰撞检测：从下方打到下层板上表面（y = -1.50）
-        if (p.mesh.position.y >= -1.50) {
-          if (Math.random() < 0.85) {
-            sparkParticles.push(createReflectedBottomPhoton(p.mesh.position.clone()));
-          } else {
-            for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
-          }
-          scene.remove(p.mesh);
-          photons.splice(i, 1);
+      p.mesh.position.y -= p.speed * dt;
+      if (p.mesh.position.y <= plateY + 0.06) {
+        if (Math.random() < 0.85) {
+          sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
+        } else {
+          for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
         }
-        if (p.mesh.position.y > 5) { scene.remove(p.mesh); photons.splice(i, 1); }
-      } else {
-        p.mesh.position.y -= p.speed * dt; // 向下移动
-        // 碰撞检测：从上方打到上层板下表面（y = -1.47）
-        if (p.mesh.position.y <= -1.47) {
-          if (Math.random() < 0.85) {
-            sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
-          } else {
-            for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(p.mesh.position.clone()));
-          }
-          scene.remove(p.mesh);
-          photons.splice(i, 1);
-        }
-        if (p.mesh.position.y < -5) { scene.remove(p.mesh); photons.splice(i, 1); }
+        scene.remove(p.mesh);
+        photons.splice(i, 1);
       }
+      if (p.mesh.position.y < -5) { scene.remove(p.mesh); photons.splice(i, 1); }
     }
 
     for (let i = sparkParticles.length-1; i >= 0; i--) {
@@ -514,7 +458,7 @@ function buildModule2Scene() {
       s.mesh.position.addScaledVector(s.vel, dt);
       s.life -= dt * 0.6;
       s.mesh.material.opacity = Math.max(0, s.life);
-      if (s.life <= 0 || s.mesh.position.y > 10 || s.mesh.position.y < -10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
+      if (s.life <= 0 || s.mesh.position.y > 10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
     }
 
     const pulse = 0.85 + 0.15*Math.sin(time*4);
@@ -533,6 +477,7 @@ function buildModule2Scene() {
     photons.forEach(p => scene.remove(p.mesh)); photons.length = 0;
     sparkParticles.forEach(s => scene.remove(s.mesh)); sparkParticles.length = 0;
   });
+  document.getElementById('m1ShowForces')?.addEventListener('change', (e) => { showForces = e.target.checked; });
 
   const instance = {
     animId, renderer, controls,
