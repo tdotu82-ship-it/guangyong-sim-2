@@ -472,7 +472,8 @@ function buildModule2Scene() {
       // 判断是从上方还是下方来的
       if (p.fromBottom) {
         p.mesh.position.y += p.speed * dt; // 向上移动
-        if (p.mesh.position.y >= plateY - 0.06) {
+        // 薄板上表面在 y = -1.5 + 0.06 = -1.44
+        if (p.mesh.position.y >= plateY + 0.06) {
           if (Math.random() < 0.85) {
             sparkParticles.push(createReflectedBottomPhoton(p.mesh.position.clone()));
           } else {
@@ -484,7 +485,8 @@ function buildModule2Scene() {
         if (p.mesh.position.y > 5) { scene.remove(p.mesh); photons.splice(i, 1); }
       } else {
         p.mesh.position.y -= p.speed * dt; // 向下移动
-        if (p.mesh.position.y <= plateY + 0.06) {
+        // 薄板下表面在 y = -1.5 - 0.06 = -1.56
+        if (p.mesh.position.y <= plateY - 0.06) {
           if (Math.random() < 0.85) {
             sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
           } else {
