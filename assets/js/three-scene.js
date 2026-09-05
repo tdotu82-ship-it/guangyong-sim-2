@@ -424,7 +424,7 @@ function buildModule2Scene() {
   }
 
   function createReflectedBottomPhoton(pos) {
-    const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.6 });
+    const mat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.6 });
     const mesh = new THREE.Mesh(photonGeo, mat);
     mesh.position.copy(pos);
     mesh.position.y -= 0.1;
