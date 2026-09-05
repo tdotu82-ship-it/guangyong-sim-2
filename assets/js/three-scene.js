@@ -478,8 +478,8 @@ function buildModule2Scene() {
       // 判断是从上方还是下方来的
       if (p.fromBottom) {
         p.mesh.position.y += p.speed * dt; // 向上移动
-        // 碰撞检测：打到板（y≈-1.5）
-        if (p.mesh.position.y >= plateY - 0.02) {
+        // 碰撞检测：从下方打到板上表面（y = -1.5 + 0.03 = -1.47）
+        if (p.mesh.position.y >= plateY + 0.03) {
           if (Math.random() < 0.85) {
             sparkParticles.push(createReflectedBottomPhoton(p.mesh.position.clone()));
           } else {
@@ -491,8 +491,8 @@ function buildModule2Scene() {
         if (p.mesh.position.y > 5) { scene.remove(p.mesh); photons.splice(i, 1); }
       } else {
         p.mesh.position.y -= p.speed * dt; // 向下移动
-        // 碰撞检测：打到板（y≈-1.5）
-        if (p.mesh.position.y <= plateY + 0.02) {
+        // 碰撞检测：从上方打到板下表面（y = -1.5 - 0.03 = -1.53）
+        if (p.mesh.position.y <= plateY - 0.03) {
           if (Math.random() < 0.85) {
             sparkParticles.push(createReflectedPhoton(p.mesh.position.clone()));
           } else {
