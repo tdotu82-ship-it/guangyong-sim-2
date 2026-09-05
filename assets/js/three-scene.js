@@ -431,11 +431,11 @@ function buildModule2Scene() {
   }
 
   function createBottomPhoton() {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.9 });
+    const mat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.9 });
     const mesh = new THREE.Mesh(photonGeo, mat);
     const glow = new THREE.Mesh(
       new THREE.SphereGeometry(0.22, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.2 })
+      new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.2 })
     );
     mesh.add(glow);
     mesh.position.set((Math.random()-0.5)*2, -5.5, (Math.random()-0.5)*1.5);
@@ -444,7 +444,7 @@ function buildModule2Scene() {
   }
 
   function createReflectedBottomPhoton(pos) {
-    const mat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.6 });
+    const mat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.6 });
     const mesh = new THREE.Mesh(photonGeo, mat);
     mesh.position.copy(pos);
     mesh.position.y -= 0.1;
