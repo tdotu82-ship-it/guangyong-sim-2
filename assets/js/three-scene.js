@@ -387,7 +387,7 @@ function buildModule2Scene() {
 
   // 分子系统
   const molecules = [];
-  const reflectedMolecules = [];
+  const bouncedMolecules = [];
   const MOLECULE_COLORS = { hot: 0xff6644, cold: 0x4488ff };
   const molGeo = new THREE.SphereGeometry(0.12, 8, 8);
   const clock = new THREE.Clock();
@@ -395,6 +395,8 @@ function buildModule2Scene() {
   let lastMolTime = 0;
 
   function createMolecule() {
+    // 分子从薄板两侧随机生成，向板运动
+    const side = Math.random() > 0.5 ? 'top' : 'bottom'; // top=上方(高温), bottom=下方(低温)
     const mat = new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.9 });
     const mesh = new THREE.Mesh(molGeo, mat);
     const glow = new THREE.Mesh(
@@ -402,25 +404,36 @@ function buildModule2Scene() {
       new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.2 })
     );
     mesh.add(glow);
-    // 分子从薄板两侧生成
-    const side = Math.random() > 0.5 ? 1 : -1; // 1=上方(高温), -1=下方(低温)
-    mesh.position.set(
-      (Math.random()-0.5)*2.5,
-      side * (1.5 + Math.random()*1.5) - 1.5,
-      (Math.random()-0.5)*1.5
-    );
+
+    // 初始位置：远离平板
+    if (side === 'top') {
+      mesh.position.set(
+        (Math.random() - 0.5) * 2.5,
+        -1.5 + 1.8 + Math.random() * 1.2,  // y: 上方区域
+        (Math.random() - 0.5) * 1.5
+      );
+    } else {
+      mesh.position.set(
+        (Math.random() - 0.5) * 2.5,
+        -1.5 - 1.8 - Math.random() * 1.2,  // y: 下方区域
+        (Math.random() - 0.5) * 1.5
+      );
+    }
     scene.add(mesh);
-    // 上方分子向下运动，下方分子向上运动
-    const velY = side * (1.5 + Math.random()*1);
-    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, velY, (Math.random()-0.5)*0.3), side: side };
+
+    // 速度：向平板运动
+    const speed = 1.5 + Math.random() * 1;
+    const velY = side === 'top' ? -speed : speed;
+
+    return { mesh, vel: new THREE.Vector3((Math.random() - 0.5) * 0.3, velY, (Math.random() - 0.5) * 0.3), side: side };
   }
 
   // 创建初始分子
-  for (let i = 0; i < 15; i++) molecules.push(createMolecule());
+  for (let i = 0; i < 20; i++) molecules.push(createMolecule());
 
-  function createReflectedMolecule(pos, isHot) {
-    const color = isHot ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold;
-    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.7 });
+  function createBouncedMolecule(pos, isHotSide, wasFromTop) {
+    const color = isHotSide ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold;
+    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.8 });
     const mesh = new THREE.Mesh(molGeo, mat);
     const glow = new THREE.Mesh(
       new THREE.SphereGeometry(0.22, 8, 8),
@@ -428,12 +441,14 @@ function buildModule2Scene() {
     );
     mesh.add(glow);
     mesh.position.copy(pos);
-    mesh.position.y += 0.1;
+    mesh.position.y += (wasFromTop ? 0.1 : -0.1); // 稍微偏移，避免再次立即碰撞
     scene.add(mesh);
-    // 高温分子反弹更快更远，低温分子反弹更慢更近
-    const isAbovePlate = pos.y > -1.5;
-    const velY = isHot ? (isAbovePlate ? -(3+Math.random()*2) : (2+Math.random()*1.5)) : (isAbovePlate ? -(0.5+Math.random()*0.5) : (0.8+Math.random()*0.5));
-    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.5, velY, (Math.random()-0.5)*0.5), life: 1.0 };
+
+    // 反弹速度：远离平板，高温侧反弹更快
+    const baseSpeed = isHotSide ? (2.5 + Math.random() * 1.5) : (1.0 + Math.random() * 0.5);
+    const velY = wasFromTop ? baseSpeed : -baseSpeed;
+
+    return { mesh, vel: new THREE.Vector3((Math.random() - 0.5) * 0.5, velY, (Math.random() - 0.5) * 0.5), life: 1.0 };
   }
 
   function animate() {
@@ -447,50 +462,53 @@ function buildModule2Scene() {
     beam.material.opacity = 0.04 + 0.02*Math.sin(time*3);
 
     // 持续生成新分子
-    if (time - lastMolTime > 0.5 && molecules.length < 20) {
+    if (time - lastMolTime > 0.4 && molecules.length < 25) {
       lastMolTime = time;
       molecules.push(createMolecule());
     }
 
     const plateY = -1.5;
-    // 更新入射分子
+    // 更新入射分子（飞向平板）
     for (let i = molecules.length-1; i >= 0; i--) {
-      if (molecules.length > 25 && i < molecules.length-5) continue;
+      if (molecules.length > 30 && i < molecules.length - 8) continue;
       const m = molecules[i];
       m.mesh.position.x += m.vel.x * dt;
       m.mesh.position.y += m.vel.y * dt;
       m.mesh.position.z += m.vel.z * dt;
 
-      // 检测与薄板的碰撞
+      // 检测与薄板的碰撞（从任意一侧）
       if (Math.abs(m.mesh.position.y - plateY) < 0.08 &&
           Math.abs(m.mesh.position.x) < 1.5 && Math.abs(m.mesh.position.z) < 1.2) {
         const pos = m.mesh.position.clone();
         scene.remove(m.mesh);
         molecules.splice(i, 1);
 
-        // 根据碰撞位置判断是高温面还是低温面（z>0是前半部分，高温面）
+        // 判断是从哪一侧来的（用于确定反弹方向）
+        const wasFromTop = m.side === 'top';
+        // 高温面 = z>0（前方），低温面 = z<0（后方）
         const isHotSide = pos.z > 0;
 
+        // 70%概率反弹，30%概率消失（模拟逃逸或合并）
         if (Math.random() < 0.7) {
-          reflectedMolecules.push(createReflectedMolecule(pos, isHotSide));
+          bouncedMolecules.push(createBouncedMolecule(pos, isHotSide, wasFromTop));
         }
       }
       // 超出边界移除
-      else if (Math.abs(m.mesh.position.y) > 4 || Math.abs(m.mesh.position.x) > 3) {
+      else if (Math.abs(m.mesh.position.y - plateY) > 3.5 || Math.abs(m.mesh.position.x) > 3) {
         scene.remove(m.mesh);
         molecules.splice(i, 1);
       }
     }
 
-    // 更新反弹分子
-    for (let i = reflectedMolecules.length-1; i >= 0; i--) {
-      const r = reflectedMolecules[i];
-      r.mesh.position.addScaledVector(r.vel, dt);
-      r.life -= dt * 0.4;
-      r.mesh.material.opacity = Math.max(0, r.life);
-      if (r.life <= 0 || Math.abs(r.mesh.position.y) > 4) {
-        scene.remove(r.mesh);
-        reflectedMolecules.splice(i, 1);
+    // 更新反弹分子（远离平板）
+    for (let i = bouncedMolecules.length-1; i >= 0; i--) {
+      const b = bouncedMolecules[i];
+      b.mesh.position.addScaledVector(b.vel, dt);
+      b.life -= dt * 0.35;
+      b.mesh.material.opacity = Math.max(0, b.life);
+      if (b.life <= 0 || Math.abs(b.mesh.position.y - plateY) > 3.5) {
+        scene.remove(b.mesh);
+        bouncedMolecules.splice(i, 1);
       }
     }
 
@@ -509,7 +527,7 @@ function buildModule2Scene() {
   });
   document.getElementById('m2ResetBtn')?.addEventListener('click', () => {
     molecules.forEach(m => scene.remove(m.mesh)); molecules.length = 0;
-    reflectedMolecules.forEach(r => scene.remove(r.mesh)); reflectedMolecules.length = 0;
+    bouncedMolecules.forEach(b => scene.remove(b.mesh)); bouncedMolecules.length = 0;
   });
 
   const instance = {
@@ -521,7 +539,8 @@ function buildModule2Scene() {
       camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
       renderer.setSize(nw, nh);
-    }
+    },
+    bouncedMolecules: bouncedMolecules  // 导出以便外部清理
   };
   sceneInstances['module2'] = instance;
   return instance;
