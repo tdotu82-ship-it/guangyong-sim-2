@@ -379,20 +379,21 @@ function buildModule2Scene() {
   formulaMesh.position.set(0, -3.0, 0);
   scene.add(formulaMesh);
 
-  // 分子系统（从上方落下，撞板反弹）
-  const molecules = [];
+  // 光子系统
+  const photons = [];
   const sparkParticles = [];
-  const molGeo = new THREE.SphereGeometry(0.12, 8, 8);
+  const photonGeo = new THREE.SphereGeometry(0.12, 8, 8);
   const clock = new THREE.Clock();
   let isPaused = false;
-  let lastMolTime = 0;
+  let showForces = true;
+  let lastPhotonTime = 0;
 
-  function createMolecule() {
-    const mat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.9 });
-    const mesh = new THREE.Mesh(molGeo, mat);
+  function createPhoton() {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.9 });
+    const mesh = new THREE.Mesh(photonGeo, mat);
     const glow = new THREE.Mesh(
       new THREE.SphereGeometry(0.22, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.2 })
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.2 })
     );
     mesh.add(glow);
     mesh.position.set((Math.random()-0.5)*2, 5.5, (Math.random()-0.5)*1.5);
@@ -409,16 +410,16 @@ function buildModule2Scene() {
     return { mesh, life: 1.0, vel: new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2) };
   }
 
-  function createBouncedMolecule(pos) {
+  function createReflectedPhoton(pos) {
     const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.6 });
-    const mesh = new THREE.Mesh(molGeo, mat);
+    const mesh = new THREE.Mesh(photonGeo, mat);
     mesh.position.copy(pos);
     mesh.position.y += 0.1;
     scene.add(mesh);
     return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, 2+Math.random()*1.5, (Math.random()-0.5)*0.3), life: 1.0 };
   }
 
-  for (let i = 0; i < 20; i++) molecules.push(createMolecule());
+  for (let i = 0; i < 20; i++) photons.push(createPhoton());
 
   function animate() {
     const id = requestAnimationFrame(animate);
@@ -473,9 +474,10 @@ function buildModule2Scene() {
     document.getElementById('m2PauseBtn').textContent = isPaused ? '▶ 播放' : '⏸ 暂停';
   });
   document.getElementById('m2ResetBtn')?.addEventListener('click', () => {
-    molecules.forEach(m => scene.remove(m.mesh)); molecules.length = 0;
+    photons.forEach(p => scene.remove(p.mesh)); photons.length = 0;
     sparkParticles.forEach(s => scene.remove(s.mesh)); sparkParticles.length = 0;
   });
+  document.getElementById('m1ShowForces')?.addEventListener('change', (e) => { showForces = e.target.checked; });
 
   const instance = {
     animId, renderer, controls,
