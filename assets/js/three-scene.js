@@ -354,8 +354,8 @@ function buildModule2Scene() {
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // 薄板（厚度加倍，双面不同颜色）
-  const plateGeo = new THREE.BoxGeometry(3, 0.12, 2.5);
+  // 薄板（上半截红色高温侧，下半截蓝色低温侧）
+  const plateW = 3, plateH = 0.06, plateD = 2.5;
   const plateMatTop = new THREE.MeshStandardMaterial({
     color: 0xff3333,
     emissive: 0xff0000,
@@ -368,22 +368,20 @@ function buildModule2Scene() {
     emissiveIntensity: 0.2,
     roughness: 0.5
   });
-  // BoxGeometry材质顺序：右(x+), 左(x-), 顶(y+), 底(y-), 前(z+), 后(z-)
-  // 顶面和前面/后面涂红色（高温侧），底面和左面/右面涂蓝色（低温侧）
-  const plate = new THREE.Mesh(plateGeo, [
-    plateMatBottom,  // 右
-    plateMatBottom,  // 左
-    plateMatTop,     // 顶
-    plateMatBottom,  // 底
-    plateMatTop,     // 前
-    plateMatTop      // 后
-  ]);
-  plate.position.set(0, -1.5, 0);
-  scene.add(plate);
+  // 上半板（红色）
+  const topPlate = new THREE.Mesh(new THREE.BoxGeometry(plateW, plateH, plateD), plateMatTop);
+  topPlate.position.set(0, -1.47, 0);
+  scene.add(topPlate);
+  // 下半板（蓝色）
+  const bottomPlate = new THREE.Mesh(new THREE.BoxGeometry(plateW, plateH, plateD), plateMatBottom);
+  bottomPlate.position.set(0, -1.53, 0);
+  scene.add(bottomPlate);
+  // 合并为一个引用用于后续操作
+  const plate = topPlate;
 
   addLabel3D(scene, '薄板', 0, -2.0, 0, '#fbbf24');
-  addLabel3D(scene, '高温侧', 0, -1.0, 1.5, '#ff3333');
-  addLabel3D(scene, '低温侧', 0, -2.0, 1.5, '#3366ff');
+  addLabel3D(scene, '高温侧', 0, -1.0, 1.8, '#ff3333');
+  addLabel3D(scene, '低温侧', 0, -2.0, 1.8, '#3366ff');
   addLabel3D(scene, 'F ↓', 0, -2.6, 0, '#ef4444');
 
   const forceArrow = new THREE.ArrowHelper(
