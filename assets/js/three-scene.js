@@ -262,7 +262,7 @@ function buildModule1Scene() {
       s.mesh.position.addScaledVector(s.vel, dt);
       s.life -= dt * 0.6;
       s.mesh.material.opacity = Math.max(0, s.life);
-      if (s.life <= 0 || s.mesh.position.y > 10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
+      if (s.life <= 0 || s.mesh.position.y > 10 || s.mesh.position.y < -10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
     }
 
     const pulse = 0.85 + 0.15*Math.sin(time*4);
@@ -514,7 +514,7 @@ function buildModule2Scene() {
       s.mesh.position.addScaledVector(s.vel, dt);
       s.life -= dt * 0.6;
       s.mesh.material.opacity = Math.max(0, s.life);
-      if (s.life <= 0 || s.mesh.position.y > 10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
+      if (s.life <= 0 || s.mesh.position.y > 10 || s.mesh.position.y < -10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
     }
 
     const pulse = 0.85 + 0.15*Math.sin(time*4);
