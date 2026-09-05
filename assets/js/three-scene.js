@@ -440,7 +440,7 @@ function buildModule2Scene() {
     mesh.add(glow);
     mesh.position.set((Math.random()-0.5)*2, -5.5, (Math.random()-0.5)*1.5);
     scene.add(mesh);
-    return { mesh, speed: 7+Math.random()*3, fromBottom: true };
+    return { mesh, speed: 4+Math.random()*2, fromBottom: true };
   }
 
   function createReflectedBottomPhoton(pos) {
@@ -467,6 +467,10 @@ function buildModule2Scene() {
 
     if (time - lastPhotonTime > 0.18) {
       lastPhotonTime = time;
+      photons.push(createPhoton());
+      photons.push(createPhoton());
+      photons.push(createPhoton());
+      photons.push(createPhoton());
       photons.push(createPhoton());
       photons.push(createBottomPhoton());
     }
