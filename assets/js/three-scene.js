@@ -354,59 +354,50 @@ function buildModule2Scene() {
   beam.rotation.x = Math.PI;
   scene.add(beam);
 
-  // 薄板：一块板，正面红色（高温面，上半部分），背面蓝色（低温面，下半部分）
+  // 薄板
   const plateGeo = new THREE.BoxGeometry(3, 0.06, 2.5);
-  const plateMatFront = new THREE.MeshStandardMaterial({
-    color: 0xff3333,
-    emissive: 0xff0000,
-    emissiveIntensity: 0.5,
-    roughness: 0.5
-  });
-  const plateMatBack = new THREE.MeshStandardMaterial({
-    color: 0x3366ff,
-    emissive: 0x0044ff,
-    emissiveIntensity: 0.2,
-    roughness: 0.5
-  });
-  const plate = new THREE.Mesh(plateGeo, [plateMatFront, plateMatBack, plateMatFront, plateMatBack, plateMatFront, plateMatBack]);
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 });
+  const plate = new THREE.Mesh(plateGeo, plateMat);
   plate.position.set(0, -1.5, 0);
   scene.add(plate);
 
-  // 标签
-  addLabel3D(scene, '高温面 (光照侧)', 0, -1.0, 0, '#ff3333');
-  addLabel3D(scene, '低温面 (背光侧)', 0, -2.0, 0, '#3366ff');
+  addLabel3D(scene, '薄板', 0, -2.0, 0, '#fbbf24');
+  addLabel3D(scene, 'F ↓', 0, -2.6, 0, '#ef4444');
 
-  // 光泳力箭头（向上，从薄板中心出发）
   const forceArrow = new THREE.ArrowHelper(
-    new THREE.Vector3(0, 1, 0),
-    new THREE.Vector3(0, -1.5, 0),
-    1.5, 0x22c55e, 0.3, 0.15
+    new THREE.Vector3(0, -1, 0),
+    new THREE.Vector3(0, -1.0, 0),
+    1.5, 0xef4444, 0.3, 0.15
   );
   scene.add(forceArrow);
-  addLabel3D(scene, '光泳力 ↑', 0, -0.3, 0, '#22c55e');
 
-  // 分子系统
+  const formulaCanvas = createTextCanvas('F = P(2ρ+α) / (c·cos²θ)', '#fbbf24', 512, 64);
+  const formulaMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(4, 0.5),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(formulaCanvas), transparent: true, side: THREE.DoubleSide })
+  );
+  formulaMesh.position.set(0, -3.0, 0);
+  scene.add(formulaMesh);
+
+  // 分子系统（从上方落下，撞板反弹）
   const molecules = [];
   const sparkParticles = [];
-  const MOLECULE_COLORS = { hot: 0xff6644, cold: 0x4488ff };
   const molGeo = new THREE.SphereGeometry(0.12, 8, 8);
   const clock = new THREE.Clock();
   let isPaused = false;
   let lastMolTime = 0;
 
   function createMolecule() {
-    const side = Math.random() > 0.5 ? 'top' : 'bottom';
-    const mat = new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.9 });
+    const mat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.9 });
     const mesh = new THREE.Mesh(molGeo, mat);
     const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.25, 8, 8),
-      new THREE.MeshBasicMaterial({ color: MOLECULE_COLORS.cold, transparent: true, opacity: 0.3 })
+      new THREE.SphereGeometry(0.22, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.2 })
     );
     mesh.add(glow);
-    mesh.position.set((Math.random()-0.5)*2.5, side==='top' ? 5.5 : -5.5, (Math.random()-0.5)*1.5);
+    mesh.position.set((Math.random()-0.5)*2, 5.5, (Math.random()-0.5)*1.5);
     scene.add(mesh);
-    // 放慢速度，让碰撞过程清晰可见
-    return { mesh, speed: 2.5+Math.random()*1.5, side: side };
+    return { mesh, speed: 7+Math.random()*3 };
   }
 
   function createSpark(pos) {
@@ -418,21 +409,13 @@ function buildModule2Scene() {
     return { mesh, life: 1.0, vel: new THREE.Vector3((Math.random()-0.5)*2, (Math.random()-0.5)*2, (Math.random()-0.5)*2) };
   }
 
-  function createBouncedMolecule(pos, isHotSide) {
-    const color = isHotSide ? MOLECULE_COLORS.hot : MOLECULE_COLORS.cold;
-    const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.85 });
+  function createBouncedMolecule(pos) {
+    const mat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.6 });
     const mesh = new THREE.Mesh(molGeo, mat);
-    const glow = new THREE.Mesh(
-      new THREE.SphereGeometry(0.25, 8, 8),
-      new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.3 })
-    );
-    mesh.add(glow);
     mesh.position.copy(pos);
     mesh.position.y += 0.1;
     scene.add(mesh);
-    // 反弹速度：高温侧更快更远，低温侧更慢更近
-    const baseSpeed = isHotSide ? 1.8+Math.random()*1.2 : 0.6+Math.random()*0.4;
-    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, baseSpeed, (Math.random()-0.5)*0.3), life: 1.0 };
+    return { mesh, vel: new THREE.Vector3((Math.random()-0.5)*0.3, 2+Math.random()*1.5, (Math.random()-0.5)*0.3), life: 1.0 };
   }
 
   for (let i = 0; i < 20; i++) molecules.push(createMolecule());
@@ -447,7 +430,6 @@ function buildModule2Scene() {
     lightSphere.scale.setScalar(1 + 0.08*Math.sin(time*3));
     beam.material.opacity = 0.04 + 0.02*Math.sin(time*3);
 
-    // 持续生成新分子
     if (time - lastMolTime > 0.18) {
       lastMolTime = time;
       molecules.push(createMolecule());
@@ -458,43 +440,24 @@ function buildModule2Scene() {
       if (molecules.length > 35 && i < molecules.length-8) continue;
       const m = molecules[i];
       m.mesh.position.y -= m.speed * dt;
-
-      // 上方分子撞到平板
-      if (m.side === 'top' && m.mesh.position.y <= plateY + 0.06) {
-        const isHotSide = m.mesh.position.z > 0;
-        if (Math.random() < 0.7) {
-          sparkParticles.push(createBouncedMolecule(m.mesh.position.clone(), isHotSide));
+      if (m.mesh.position.y <= plateY + 0.06) {
+        if (Math.random() < 0.85) {
+          sparkParticles.push(createBouncedMolecule(m.mesh.position.clone()));
         } else {
           for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(m.mesh.position.clone()));
         }
         scene.remove(m.mesh);
         molecules.splice(i, 1);
-        continue;
       }
-      // 下方分子撞到平板
-      if (m.side === 'bottom' && m.mesh.position.y >= plateY - 0.06) {
-        const isHotSide = m.mesh.position.z > 0;
-        if (Math.random() < 0.7) {
-          const bounced = createBouncedMolecule(m.mesh.position.clone(), isHotSide);
-          bounced.vel.y = -(0.8+Math.random()*0.5); // 向下反弹
-          sparkParticles.push(bounced);
-        } else {
-          for (let j = 0; j < 2; j++) sparkParticles.push(createSpark(m.mesh.position.clone()));
-        }
-        scene.remove(m.mesh);
-        molecules.splice(i, 1);
-        continue;
-      }
-      // 超出边界移除
-      if (m.mesh.position.y < -5 || m.mesh.position.y > 5) { scene.remove(m.mesh); molecules.splice(i, 1); }
+      if (m.mesh.position.y < -5) { scene.remove(m.mesh); molecules.splice(i, 1); }
     }
 
     for (let i = sparkParticles.length-1; i >= 0; i--) {
       const s = sparkParticles[i];
       s.mesh.position.addScaledVector(s.vel, dt);
-      s.life -= dt * 0.3;  // 延长存活时间，让反弹更明显
+      s.life -= dt * 0.6;
       s.mesh.material.opacity = Math.max(0, s.life);
-      if (s.life <= 0 || s.mesh.position.y > 10 || s.mesh.position.y < -10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
+      if (s.life <= 0 || s.mesh.position.y > 10) { scene.remove(s.mesh); sparkParticles.splice(i, 1); }
     }
 
     const pulse = 0.85 + 0.15*Math.sin(time*4);
